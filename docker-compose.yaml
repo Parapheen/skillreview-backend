@@ -1,18 +1,54 @@
-version: "3.8"
-
+version: '3'
 services:
   app:
-    build: .
-    env_file:
-      - .env
+    container_name: full_app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports: 
+      - 8888:8888 
+    restart: on-failure
+    volumes:              # without this volume mapping to the directory of our project, live reloading wont happen
+      - .:/usr/src/app
+    depends_on:
+      - skillreview-postgres
+    networks:
+      - skillreview
+
+  skillreview-postgres:
+    image: postgres:latest
+    container_name: full_db_postgres
+    environment:
+      - POSTGRES_USER=${DB_USER}  
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST} 
     ports:
-      - "8000:8000"
-
-
-  database:
-    image: postgres:12
-    env_file:
-      - .env
+      - '5432:5432'
+    volumes:
+      - database_postgres:/var/lib/postgresql/data
+    networks:
+      - forum
+    
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - forum-postgres
     ports:
-      - "5432:5432"
+      - "5050:80"
+    networks:
+      - skillreview
+    restart: unless-stopped
 
+
+volumes:
+  api:
+  database_postgres:
+
+networks:
+  skillreview:
+    driver: bridge
