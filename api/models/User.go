@@ -14,7 +14,9 @@ import (
 type User struct {
 	Base
 	Nickname       string               `gorm:"size:255;not null;unique" json:"nickname"`
-	Email          string               `gorm:"size:100;not null;unique" json:"email"`
+	Email          string               `gorm:"size:100;unique" json:"email"`
+	SteamID        string               `gorm:"size:255;default:null;unique" json:"steam_id"`
+	Avatar         string               `gorm:"size:255;" json:"avatar"`
 	ReviewRequests []ReviewRequest      `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"review_requests"`
 }
 
@@ -40,24 +42,10 @@ func (u *User) Validate(action string) error {
 		}
 
 		return nil
-	case "login":
-		if u.Email == "" {
-			return errors.New("Required Email")
-		}
-		if err := checkmail.ValidateFormat(u.Email); err != nil {
-			return errors.New("Invalid Email")
-		}
-		return nil
 
 	default:
 		if u.Nickname == "" {
 			return errors.New("Required Nickname")
-		}
-		if u.Email == "" {
-			return errors.New("Required Email")
-		}
-		if err := checkmail.ValidateFormat(u.Email); err != nil {
-			return errors.New("Invalid Email")
 		}
 		return nil
 	}
@@ -86,6 +74,18 @@ func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 func (u *User) FindUserByID(db *gorm.DB, uid uint32) (*User, error) {
 	var err error
 	err = db.Model(User{}).Where("id = ?", uid).Take(&u).Error
+	if err != nil {
+		return &User{}, err
+	}
+	if gorm.IsRecordNotFoundError(err) {
+		return &User{}, errors.New("User Not Found")
+	}
+	return u, err
+}
+
+func (u *User) FindUserBySteamID(db *gorm.DB, steamId string) (*User, error) {
+	var err error
+	err = db.Model(User{}).Where("steam_id = ?", steamId).Take(&u).Error
 	if err != nil {
 		return &User{}, err
 	}
