@@ -15,9 +15,9 @@ type User struct {
 	Base
 	Nickname       string               `gorm:"size:255;not null;unique" json:"nickname"`
 	Email          string               `gorm:"size:100;unique" json:"email"`
-	SteamID        string               `gorm:"size:255;default:null;unique" json:"steam_id"`
+	SteamID        string               `gorm:"size:255;default:null;unique" json:"steamId"`
 	Avatar         string               `gorm:"size:255;" json:"avatar"`
-	ReviewRequests []ReviewRequest      `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"review_requests"`
+	ReviewRequests []ReviewRequest      `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"reviewRequests"`
 }
 
 func (u *User) Prepare() {

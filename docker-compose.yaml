@@ -9,7 +9,7 @@ services:
       - 8080:8080 
     restart: on-failure
     volumes:              # without this volume mapping to the directory of our project, live reloading wont happen
-      - .:/usr/src/app
+      - api:/usr/src/app
     depends_on:
       - skillreview_postgres
     networks:
@@ -30,19 +30,19 @@ services:
     networks:
       - skillreview
     
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin_container
-    environment:
-      PGADMIN_DEFAULT_EMAIL: username@skillreview.com
-      PGADMIN_DEFAULT_PASSWORD: password
-    depends_on:
-      - skillreview_postgres
-    ports:
-      - "5050:80"
-    networks:
-      - skillreview
-    restart: unless-stopped
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin_container
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: username@skillreview.com
+  #     PGADMIN_DEFAULT_PASSWORD: password
+  #   depends_on:
+  #     - skillreview_postgres
+  #   ports:
+  #     - "5050:80"
+  #   networks:
+  #     - skillreview
+  #   restart: unless-stopped
 
 
 volumes:

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 
@@ -16,6 +18,14 @@ import (
 type Server struct {
 	DB     *gorm.DB
 	Router *mux.Router
+}
+
+func Getenv(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
 }
 
 func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) {
@@ -39,6 +49,13 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 }
 
 func (server *Server) Run(addr string) {
-	fmt.Println("Listening to port 8080")
-	log.Fatal(http.ListenAndServe(addr, server.Router))
+	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	origins := handlers.AllowedOrigins([]string{"*"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
+
+	loggedRouter := handlers.LoggingHandler(os.Stdout, server.Router)
+	port := Getenv("PORT", "8080")
+	log.Printf("Listening to port %s", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), handlers.CORS(headers, methods, origins)(server.Router)),
+		handlers.CompressHandler(server.Router), loggedRouter)
 }
