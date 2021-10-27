@@ -17,6 +17,7 @@ type User struct {
 	Email          string               `gorm:"size:100;unique" json:"email"`
 	SteamID        string               `gorm:"size:255;default:null;unique" json:"steamId"`
 	Avatar         string               `gorm:"size:255;" json:"avatar"`
+	Rank           string               `gorm:"size:255;" json:"rank"`
 	ReviewRequests []ReviewRequest      `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"reviewRequests"`
 }
 
@@ -71,9 +72,9 @@ func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 	return &users, err
 }
 
-func (u *User) FindUserByID(db *gorm.DB, uid uint32) (*User, error) {
+func (u *User) FindUserByUIID(db *gorm.DB, uid uuid.UUID) (*User, error) {
 	var err error
-	err = db.Model(User{}).Where("id = ?", uid).Take(&u).Error
+	err = db.Model(User{}).Where("uuid = ?", uid).Take(&u).Error
 	if err != nil {
 		return &User{}, err
 	}
@@ -95,7 +96,7 @@ func (u *User) FindUserBySteamID(db *gorm.DB, steamId string) (*User, error) {
 	return u, err
 }
 
-func (u *User) UpdateUser(db *gorm.DB, uid uint32) (*User, error) {
+func (u *User) UpdateUser(db *gorm.DB, uid uuid.UUID) (*User, error) {
 
 	db = db.Model(&User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
@@ -115,7 +116,7 @@ func (u *User) UpdateUser(db *gorm.DB, uid uint32) (*User, error) {
 	return u, nil
 }
 
-func (u *User) DeleteUser(db *gorm.DB, uid uint32) (int64, error) {
+func (u *User) DeleteUser(db *gorm.DB, uid uuid.UUID) (int64, error) {
 
 	db = db.Model(&User{}).Where("id = ?", uid).Take(&User{}).Delete(&User{})
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -16,7 +15,7 @@ func CreateToken(userID uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["user_id"] = userID
-	claims["exp"] = time.Now().Add(time.Hour * 1).Unix() //Token expires after 1 hour
+	claims["exp"] = time.Now().Add(time.Hour * 24 * 30).Unix() //Token expires after 1 hour
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("API_SECRET")))
 
@@ -49,7 +48,7 @@ func ExtractToken(r *http.Request) string {
 	return ""
 }
 
-func ExtractTokenID(r *http.Request) (uint32, error) {
+func ExtractTokenID(r *http.Request) (string, error) {
 
 	tokenString := ExtractToken(r)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -59,15 +58,12 @@ func ExtractTokenID(r *http.Request) (uint32, error) {
 		return []byte(os.Getenv("API_SECRET")), nil
 	})
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		uid, err := strconv.ParseUint(fmt.Sprintf("%.0f", claims["user_id"]), 10, 32)
-		if err != nil {
-			return 0, err
-		}
-		return uint32(uid), nil
+		uid := fmt.Sprint(claims["user_id"])
+		return uid, nil
 	}
-	return 0, nil
+	return "", nil
 }

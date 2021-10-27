@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
+	"os"
 
-	"github.com/gorilla/mux"
 	"github.com/Parapheen/skillreview-backend/api/auth"
 	"github.com/Parapheen/skillreview-backend/api/models"
 	"github.com/Parapheen/skillreview-backend/api/responses"
 	"github.com/Parapheen/skillreview-backend/api/utils"
+	"github.com/gorilla/mux"
+	uuid "github.com/satori/go.uuid"
 )
 
 func (server *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -61,13 +62,13 @@ func (server *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 func (server *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+	uid, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
 	user := models.User{}
-	userGotten, err := user.FindUserByID(server.DB, uint32(uid))
+	userGotten, err := user.FindUserByUIID(server.DB, uid)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -78,7 +79,7 @@ func (server *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+	uid, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -99,7 +100,7 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	if tokenID != uint32(uid) {
+	if tokenID != uid.String() {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
@@ -109,7 +110,7 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	updatedUser, err := user.UpdateUser(server.DB, uint32(uid))
+	updatedUser, err := user.UpdateUser(server.DB, uid)
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
@@ -124,7 +125,7 @@ func (server *Server) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{}
 
-	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+	uid, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -134,15 +135,65 @@ func (server *Server) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	if tokenID != 0 && tokenID != uint32(uid) {
+	if tokenID != "" && tokenID != uid.String() {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
-	_, err = user.DeleteUser(server.DB, uint32(uid))
+	_, err = user.DeleteUser(server.DB, uid)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
 	w.Header().Set("Entity", fmt.Sprintf("%d", uid))
 	responses.JSON(w, http.StatusNoContent, "")
+}
+
+type Match struct {
+	HeroID           int `json:"hero_id"`
+	MatchID          int `json:"match_id"`
+	MatchTimestamp   int `json:"match_timestamp"`
+	PerfomanceRating int `json:"perfomance_rating"`
+	WonMatch         bool `json:"won_match"`
+}
+
+func (server *Server) GetRecentMatches(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	matches := []Match{}
+	user := models.User{}
+
+	uid, err := uuid.FromString(vars["id"])
+	if err != nil {
+		responses.ERROR(w, http.StatusBadRequest, err)
+		return
+	}
+	tokenID, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+	fmt.Printf("%v and %v", tokenID, uid)
+	if tokenID != "" && tokenID != uid.String() {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+	userGotten, err := user.FindUserByUIID(server.DB, uid)
+	if err != nil {
+		responses.ERROR(w, http.StatusBadRequest, err)
+		return
+	}
+	client := http.DefaultClient
+	resp, err := client.Get(fmt.Sprintf("%sprofiles/%s/recent_matches", os.Getenv("STATS_API"), userGotten.SteamID))
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer resp.Body.Close()
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	json.Unmarshal(content, &matches)
+	responses.JSON(w, http.StatusOK, matches)
 }

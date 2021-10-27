@@ -9,7 +9,7 @@ services:
       - 8080:8080 
     restart: on-failure
     volumes:              # without this volume mapping to the directory of our project, live reloading wont happen
-      - api:/usr/src/app
+      - ./:/usr/src/app
     depends_on:
       - skillreview_postgres
     networks:
@@ -46,7 +46,6 @@ services:
 
 
 volumes:
-  api:
   database_postgres:
 
 networks:

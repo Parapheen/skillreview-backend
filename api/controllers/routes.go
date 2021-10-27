@@ -13,12 +13,14 @@ func (s *Server) initializeRoutes() {
 			middlewares.SetMiddlewareJSON(s.LoginCallback)).
 		Methods("GET")
 
+		
 	// Users routes
 	s.Router.HandleFunc("/v1/users", middlewares.SetMiddlewareJSON(s.CreateUser)).Methods("POST")
 	s.Router.HandleFunc("/v1/users", middlewares.SetMiddlewareJSON(s.GetUsers)).Methods("GET")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateUser))).Methods("PUT")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
+	s.Router.HandleFunc("/v1/users/{id}/matches", middlewares.SetMiddlewareAuthentication(s.GetRecentMatches)).Methods("GET")
 
 	// ReviewRequests routes
 	s.Router.HandleFunc("/v1/requests", middlewares.SetMiddlewareJSON(s.CreateReviewRequest)).Methods("POST")

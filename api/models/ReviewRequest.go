@@ -69,7 +69,7 @@ func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB) (*[]ReviewRequest, e
 	return &reviewRequests, nil
 }
 
-func (rr *ReviewRequest) FindReviewRequestByID(db *gorm.DB, pid uint64) (*ReviewRequest, error) {
+func (rr *ReviewRequest) FindReviewRequestByID(db *gorm.DB, pid uuid.UUID) (*ReviewRequest, error) {
 	var err error
 	err = db.Model(&ReviewRequest{}).Where("id = ?", pid).Take(&rr).Error
 	if err != nil {
@@ -106,7 +106,7 @@ func (rr *ReviewRequest) UpdateReviewRequest(db *gorm.DB) (*ReviewRequest, error
 	return rr, nil
 }
 
-func (rr *ReviewRequest) DeleteReviewRequest(db *gorm.DB, pid uint64, uid uint32) (int64, error) {
+func (rr *ReviewRequest) DeleteReviewRequest(db *gorm.DB, pid uuid.UUID, uid uuid.UUID) (int64, error) {
 
 	db = db.Model(&ReviewRequest{}).Where("id = ? and author_id = ?", pid, uid).Take(&ReviewRequest{}).Delete(&ReviewRequest{})
 

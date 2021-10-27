@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/Parapheen/skillreview-backend/api/auth"
 	"github.com/Parapheen/skillreview-backend/api/models"
 	"github.com/Parapheen/skillreview-backend/api/responses"
 	"github.com/Parapheen/skillreview-backend/api/utils"
+	"github.com/gorilla/mux"
+	uuid "github.com/satori/go.uuid"
 )
 
 func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +40,18 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	if uid != reviewReq.AuthorID {
+	userUUID, err := uuid.FromString(uid)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	user := models.User{}
+	userGotten, err := user.FindUserByUIID(server.DB, userUUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	if userGotten.ID != reviewReq.AuthorID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
@@ -68,7 +80,7 @@ func (server *Server) GetReviewRequests(w http.ResponseWriter, r *http.Request) 
 func (server *Server) GetReviewRequest(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	reviewReqId, err := strconv.ParseUint(vars["id"], 10, 64)
+	reviewReqId, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -105,8 +117,18 @@ func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusNotFound, errors.New("Post not found"))
 		return
 	}
-
-	if uid != reviewReq.AuthorID {
+	userUUID, err := uuid.FromString(uid)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	user := models.User{}
+	userGotten, err := user.FindUserByUIID(server.DB, userUUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	if userGotten.ID != reviewReq.AuthorID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
@@ -124,7 +146,7 @@ func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if uid != reviewReqUpdate.AuthorID {
+	if userGotten.ID != reviewReqUpdate.AuthorID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
@@ -152,7 +174,7 @@ func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request
 
 	vars := mux.Vars(r)
 
-	reviewReqId, err := strconv.ParseUint(vars["id"], 10, 64)
+	reviewReqId, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -170,12 +192,23 @@ func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusNotFound, errors.New("Unauthorized"))
 		return
 	}
+	userUUID, err := uuid.FromString(uid)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	user := models.User{}
+	userGotten, err := user.FindUserByUIID(server.DB, userUUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
 
-	if uid != reviewReq.AuthorID {
+	if userGotten.ID != reviewReq.AuthorID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	_, err = reviewReq.DeleteReviewRequest(server.DB, reviewReqId, uid)
+	_, err = reviewReq.DeleteReviewRequest(server.DB, reviewReqId, userUUID)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return

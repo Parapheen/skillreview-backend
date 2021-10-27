@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -91,6 +93,59 @@ func CompleteAuth(vars url.Values) (string, error){
 	return steamID, nil
 }
 
+type UserStatsResponse struct {
+	UserID                          int `json:"account_id"`
+	BadgePoints                     int `json:"badge_points"`
+	IsPlusSubscriber                bool `json:"is_plus_subscriber"`
+	PlusOriginalStartDate           int `json:"plus_original_start_date"`
+	PreviousRankTier                int `json:"previous_rank_tier"`
+	RankTier                        int `json:"rank_tier"`
+}
+
+func ConvertRankToMedal(rankTier int) (string, error) {
+	m := map[int]string{
+		80: "Immortal",
+		70: "Divine",
+		60: "Ancient",
+		50: "Legend",
+		40: "Archon",
+		30: "Crusader",
+		20: "Guardian",
+		10: "Herald",
+		0: "Uncalibrated",
+	}
+	rank := int(math.Floor(float64(rankTier) / 10) * 10)
+	tier := rankTier % 10
+	medal := "Unknown"
+	if (rank >= 0 && rank < 90) {
+	  medal = m[rank]
+	  if (rank != 80 && rank > 0 && tier > 0) {
+		medal = fmt.Sprintf("%s %d", medal, tier)
+	  }
+	}
+	return medal, nil
+}
+
+func FetchUserRank(steamID string) (string, error) {
+	client := http.DefaultClient
+	stats := UserStatsResponse{}
+
+	resp, err := client.Get(fmt.Sprintf("%sprofiles/%s/card", os.Getenv("STATS_API"), steamID))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	json.Unmarshal(content, &stats)
+	rank, err := ConvertRankToMedal(stats.RankTier)
+	if err != nil {
+		return "", err
+	}
+	return rank, nil
+}
 
 func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Expose-Headers", "Authorization")
@@ -113,6 +168,11 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 		user.Nickname = steamUser.NickName
 		user.SteamID = steamUser.UserID
 		user.Avatar = steamUser.AvatarURL
+		user.Rank, err = FetchUserRank(user.SteamID)
+		if err != nil {
+			responses.ERROR(w, http.StatusInternalServerError, err)
+			return
+		}
 		user.Prepare()
 		err = user.Validate("")
 		if err != nil {
