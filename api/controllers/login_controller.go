@@ -15,27 +15,13 @@ import (
 	"github.com/Parapheen/skillreview-backend/api/auth"
 	"github.com/Parapheen/skillreview-backend/api/models"
 	"github.com/Parapheen/skillreview-backend/api/responses"
+	"github.com/Parapheen/skillreview-backend/api/utils"
 	formaterror "github.com/Parapheen/skillreview-backend/api/utils"
 	"github.com/luanruisong/g-steam"
 )
 
-type Player struct {
-	UserID              string `json:"steamid"`
-	NickName            string `json:"personaname"`
-	Name                string `json:"realname"`
-	AvatarURL           string `json:"avatarfull"`
-	LocationCountryCode string `json:"loccountrycode"`
-	LocationStateCode   string `json:"locstatecode"`
-}
-
-type steamResponse struct {
-	Response struct {
-		Players []Player `json:"players"`
-	} `json:"response"`
-}
-
-func FetchUser(steamID string) (Player, error) {
-	resp := steamResponse{}
+func FetchUser(steamID string) (responses.Player, error) {
+	resp := responses.SteamResponse{}
 	client := steam.NewClient(os.Getenv("STEAM_API_KEY"))
 	api := client.Api()
 	_, err := api.Server("ISteamUser"). // Set up service interface
@@ -44,7 +30,7 @@ func FetchUser(steamID string) (Player, error) {
 		AddParam("steamids", steamID). // Setting parameters (If the key parameter is not set, the client's appKey will be added by default)
 		Get(&resp)
 	if err != nil {
-		return Player{}, err
+		return responses.Player{}, err
 	}
 	player := resp.Response.Players[0]
 	return player, nil
@@ -93,15 +79,6 @@ func CompleteAuth(vars url.Values) (string, error){
 	return steamID, nil
 }
 
-type UserStatsResponse struct {
-	UserID                          int `json:"account_id"`
-	BadgePoints                     int `json:"badge_points"`
-	IsPlusSubscriber                bool `json:"is_plus_subscriber"`
-	PlusOriginalStartDate           int `json:"plus_original_start_date"`
-	PreviousRankTier                int `json:"previous_rank_tier"`
-	RankTier                        int `json:"rank_tier"`
-}
-
 func ConvertRankToMedal(rankTier int) (string, error) {
 	m := map[int]string{
 		80: "Immortal",
@@ -128,7 +105,7 @@ func ConvertRankToMedal(rankTier int) (string, error) {
 
 func FetchUserRank(steamID string) (string, error) {
 	client := http.DefaultClient
-	stats := UserStatsResponse{}
+	stats := responses.UserStatsResponse{}
 
 	resp, err := client.Get(fmt.Sprintf("%sprofiles/%s/card", os.Getenv("STATS_API"), steamID))
 	if err != nil {
@@ -166,9 +143,10 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		user.Nickname = steamUser.NickName
-		user.SteamID = steamUser.UserID
+		user.Steam64ID = steamUser.UserID
+		user.Steam32ID, err = utils.Steam64toSteam32(user.Steam64ID)
 		user.Avatar = steamUser.AvatarURL
-		user.Rank, err = FetchUserRank(user.SteamID)
+		user.Rank, err = FetchUserRank(user.Steam64ID)
 		if err != nil {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return

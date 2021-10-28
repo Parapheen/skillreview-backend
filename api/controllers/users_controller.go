@@ -38,7 +38,7 @@ func (server *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 
-		formattedError := formaterror.FormatError(err.Error())
+		formattedError := utils.FormatError(err.Error())
 
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
@@ -112,7 +112,7 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	updatedUser, err := user.UpdateUser(server.DB, uid)
 	if err != nil {
-		formattedError := formaterror.FormatError(err.Error())
+		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
@@ -148,18 +148,10 @@ func (server *Server) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusNoContent, "")
 }
 
-type Match struct {
-	HeroID           int `json:"hero_id"`
-	MatchID          int `json:"match_id"`
-	MatchTimestamp   int `json:"match_timestamp"`
-	PerfomanceRating int `json:"perfomance_rating"`
-	WonMatch         bool `json:"won_match"`
-}
-
 func (server *Server) GetRecentMatches(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	matches := []Match{}
+	matches := []responses.Match{}
 	user := models.User{}
 
 	uid, err := uuid.FromString(vars["id"])
@@ -172,7 +164,6 @@ func (server *Server) GetRecentMatches(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	fmt.Printf("%v and %v", tokenID, uid)
 	if tokenID != "" && tokenID != uid.String() {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
@@ -183,7 +174,7 @@ func (server *Server) GetRecentMatches(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	client := http.DefaultClient
-	resp, err := client.Get(fmt.Sprintf("%sprofiles/%s/recent_matches", os.Getenv("STATS_API"), userGotten.SteamID))
+	resp, err := client.Get(fmt.Sprintf("%sprofiles/%s/recent_matches", os.Getenv("STATS_API"), userGotten.Steam64ID))
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return

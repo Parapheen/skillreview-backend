@@ -12,22 +12,25 @@ import (
 
 type ReviewRequest struct {
 	Base
-	MatchId   uint32    `gorm:"not null" json:"match_id"`
-	Content   string    `gorm:"size:255;not null;" json:"content"`
-	Author    User      `json:"author"`
-	AuthorID  uint32    `gorm:"not null" json:"author_id"`
+	MatchId               uint32    `gorm:"not null" json:"match_id"`
+	Description           string    `gorm:"size:255;not null;" json:"description"`
+	Author                User      `json:"author"`
+	AuthorID              uint32    `gorm:"not null" json:"-"`
+	SelfRateLaning        int       `gorm:"not null" json:"self_rate_laning"`
+	SelfRateTeamFights    int       `gorm:"not null" json:"self_rate_teamfights"`
+	SelfRateOverall       int       `gorm:"not null" json:"self_rate_overall"`
 }
 
 func (rr *ReviewRequest) Prepare() {
 	rr.UUID = uuid.NewV4()
-	rr.Content = html.EscapeString(strings.TrimSpace(rr.Content))
+	rr.Description = html.EscapeString(strings.TrimSpace(rr.Description))
 	rr.Author = User{}
 	rr.CreatedAt = time.Now()
 	rr.UpdatedAt = time.Now()
 }
 
 func (rr *ReviewRequest) Validate() error {
-	if rr.Content == "" {
+	if rr.Description == "" {
 		return errors.New("Required Content")
 	}
 	if rr.AuthorID < 1 {
@@ -90,7 +93,7 @@ func (rr *ReviewRequest) UpdateReviewRequest(db *gorm.DB) (*ReviewRequest, error
 
 	db = db.Model(&ReviewRequest{}).Where("id = ?", rr.ID).Take(&ReviewRequest{}).UpdateColumns(
 		map[string]interface{}{
-			"content":  rr.Content,
+			"description":  rr.Description,
 			"updated_at": time.Now(),
 		},
 	)

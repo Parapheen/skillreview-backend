@@ -15,11 +15,19 @@ type User struct {
 	Base
 	Nickname       string               `gorm:"size:255;not null;unique" json:"nickname"`
 	Email          string               `gorm:"size:100;unique" json:"email"`
-	SteamID        string               `gorm:"size:255;default:null;unique" json:"steamId"`
+	Steam64ID      string               `gorm:"size:255;default:null;unique" json:"steam64Id"`
+	Steam32ID      string               `gorm:"size:255;default:null;unique" json:"steam32Id"`
 	Avatar         string               `gorm:"size:255;" json:"avatar"`
 	Rank           string               `gorm:"size:255;" json:"rank"`
 	ReviewRequests []ReviewRequest      `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"reviewRequests"`
+	Plan           PlanType             `gorm:"default:'basic';" json:"plan"`
 }
+
+type PlanType string
+const (
+	Free    PlanType = "basic"
+	Premium PlanType = "pro"
+)
 
 func (u *User) Prepare() {
 	u.UUID = uuid.NewV4()
@@ -84,9 +92,9 @@ func (u *User) FindUserByUIID(db *gorm.DB, uid uuid.UUID) (*User, error) {
 	return u, err
 }
 
-func (u *User) FindUserBySteamID(db *gorm.DB, steamId string) (*User, error) {
+func (u *User) FindUserBySteamID(db *gorm.DB, steam64Id string) (*User, error) {
 	var err error
-	err = db.Model(User{}).Where("steam_id = ?", steamId).Take(&u).Error
+	err = db.Model(User{}).Where("steam64_id = ?", steam64Id).Take(&u).Error
 	if err != nil {
 		return &User{}, err
 	}

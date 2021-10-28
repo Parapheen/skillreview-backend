@@ -22,6 +22,9 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
 	s.Router.HandleFunc("/v1/users/{id}/matches", middlewares.SetMiddlewareAuthentication(s.GetRecentMatches)).Methods("GET")
 
+	// Matches
+	s.Router.HandleFunc("/v1/matches/{id}", middlewares.SetMiddlewareAuthentication(s.GetMatch)).Methods("GET")
+
 	// ReviewRequests routes
 	s.Router.HandleFunc("/v1/requests", middlewares.SetMiddlewareJSON(s.CreateReviewRequest)).Methods("POST")
 	s.Router.HandleFunc("/v1/requests", middlewares.SetMiddlewareJSON(s.GetReviewRequests)).Methods("GET")

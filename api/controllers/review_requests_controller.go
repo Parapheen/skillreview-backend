@@ -57,7 +57,7 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 	}
 	reviewCreated, err := reviewReq.SaveReviewRequest(server.DB)
 	if err != nil {
-		formattedError := formaterror.FormatError(err.Error())
+		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
@@ -163,7 +163,7 @@ func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request
 	postUpdated, err := reviewReqUpdate.UpdateReviewRequest(server.DB)
 
 	if err != nil {
-		formattedError := formaterror.FormatError(err.Error())
+		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
