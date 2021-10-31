@@ -25,10 +25,10 @@ func FetchUser(steamID string) (responses.Player, error) {
 	client := steam.NewClient(os.Getenv("STEAM_API_KEY"))
 	api := client.Api()
 	_, err := api.Server("ISteamUser"). // Set up service interface
-		Method("GetPlayerSummaries"). // Set access function
-		Version("v0002"). // Set version
-		AddParam("steamids", steamID). // Setting parameters (If the key parameter is not set, the client's appKey will be added by default)
-		Get(&resp)
+						Method("GetPlayerSummaries").  // Set access function
+						Version("v0002").              // Set version
+						AddParam("steamids", steamID). // Setting parameters (If the key parameter is not set, the client's appKey will be added by default)
+						Get(&resp)
 	if err != nil {
 		return responses.Player{}, err
 	}
@@ -36,7 +36,7 @@ func FetchUser(steamID string) (responses.Player, error) {
 	return player, nil
 }
 
-func CompleteAuth(vars url.Values) (string, error){
+func CompleteAuth(vars url.Values) (string, error) {
 	v := make(url.Values)
 	v.Set("openid.assoc_handle", vars.Get("openid.assoc_handle"))
 	v.Set("openid.signed", vars.Get("openid.signed"))
@@ -64,7 +64,7 @@ func CompleteAuth(vars url.Values) (string, error){
 	if response[0] != "ns:"+"http://specs.openid.net/auth/2.0" {
 		return "", errors.New("Wrong ns in the response.")
 	}
-	
+
 	if response[1] == "is_valid:false" {
 		return "", errors.New("Unable validate openId.")
 	}
@@ -75,7 +75,8 @@ func CompleteAuth(vars url.Values) (string, error){
 		return "", errors.New("Invalid Steam ID pattern.")
 	}
 
-	steamID := regexp.MustCompile("\\D+").ReplaceAllString(openIDURL, "")
+	steamIDSplit := strings.Split(openIDURL, "/")
+	steamID := steamIDSplit[len(steamIDSplit) - 1]
 	return steamID, nil
 }
 
@@ -89,16 +90,16 @@ func ConvertRankToMedal(rankTier int) (string, error) {
 		30: "Crusader",
 		20: "Guardian",
 		10: "Herald",
-		0: "Uncalibrated",
+		0:  "Uncalibrated",
 	}
-	rank := int(math.Floor(float64(rankTier) / 10) * 10)
+	rank := int(math.Floor(float64(rankTier)/10) * 10)
 	tier := rankTier % 10
 	medal := "Unknown"
-	if (rank >= 0 && rank < 90) {
-	  medal = m[rank]
-	  if (rank != 80 && rank > 0 && tier > 0) {
-		medal = fmt.Sprintf("%s %d", medal, tier)
-	  }
+	if rank >= 0 && rank < 90 {
+		medal = m[rank]
+		if rank != 80 && rank > 0 && tier > 0 {
+			medal = fmt.Sprintf("%s %d", medal, tier)
+		}
 	}
 	return medal, nil
 }
@@ -116,7 +117,10 @@ func FetchUserRank(steamID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	json.Unmarshal(content, &stats)
+	err = json.Unmarshal(content, &stats)
+	if err != nil {
+		return "", err
+	}
 	rank, err := ConvertRankToMedal(stats.RankTier)
 	if err != nil {
 		return "", err
@@ -135,7 +139,8 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	user := models.User{}
 	userGotten, err := user.FindUserBySteamID(server.DB, steamID)
-
+	fmt.Printf("%+v %+v\n", userGotten, err)
+	fmt.Printf("%+v\n", steamID)
 	if err != nil {
 		steamUser, err := FetchUser(steamID)
 		if err != nil {
@@ -145,6 +150,10 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 		user.Nickname = steamUser.NickName
 		user.Steam64ID = steamUser.UserID
 		user.Steam32ID, err = utils.Steam64toSteam32(user.Steam64ID)
+		if err != nil {
+			responses.ERROR(w, http.StatusInternalServerError, err)
+			return
+		}
 		user.Avatar = steamUser.AvatarURL
 		user.Rank, err = FetchUserRank(user.Steam64ID)
 		if err != nil {
@@ -174,6 +183,7 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		responses.JSON(w, http.StatusOK, userCreated)
+		return
 	}
 
 	token, err := auth.CreateToken(userGotten.UUID)
@@ -183,4 +193,5 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	responses.JSON(w, http.StatusOK, userGotten)
+	return
 }

@@ -3,27 +3,27 @@ package seed
 import (
 	"log"
 
-	"github.com/jinzhu/gorm"
 	"github.com/Parapheen/skillreview-backend/api/models"
+	"github.com/jinzhu/gorm"
 )
 
 var users = []models.User{
-	models.User{
+	{
 		Nickname: "Steven victor",
 		Email:    "steven@gmail.com",
 	},
-	models.User{
+	{
 		Nickname: "Martin Luther",
 		Email:    "luther@gmail.com",
 	},
 }
 
 var posts = []models.ReviewRequest{
-	models.ReviewRequest{
-		Content: "Hello world 1",
+	{
+		Description: "Hello world 1",
 	},
-	models.ReviewRequest{
-		Content: "Hello world 2",
+	{
+		Description: "Hello world 2",
 	},
 }
 
@@ -43,7 +43,7 @@ func Load(db *gorm.DB) {
 		log.Fatalf("attaching foreign key error: %v", err)
 	}
 
-	for i, _ := range users {
+	for i := range users {
 		err = db.Model(&models.User{}).Create(&users[i]).Error
 		if err != nil {
 			log.Fatalf("cannot seed users table: %v", err)

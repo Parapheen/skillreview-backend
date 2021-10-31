@@ -16,8 +16,8 @@ func (server *Server) GetMatch(w http.ResponseWriter, r *http.Request) {
 
 	match := responses.MinimalMatch{}
 
-	matchID:= vars["id"]
-	
+	matchID := vars["id"]
+
 	client := http.DefaultClient
 	resp, err := client.Get(fmt.Sprintf("%smatches/%s", os.Getenv("STATS_API"), matchID))
 	if err != nil {
@@ -30,9 +30,12 @@ func (server *Server) GetMatch(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	// fmt.Printf("%+v", string(content))
-	json.Unmarshal(content, &match)
-	if (match.MatchID == 0) {
+	err = json.Unmarshal(content, &match)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	if match.MatchID == 0 {
 		responses.JSON(w, http.StatusNotFound, err)
 	}
 	responses.JSON(w, http.StatusOK, match)

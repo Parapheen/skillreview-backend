@@ -13,17 +13,17 @@ func (s *Server) initializeRoutes() {
 			middlewares.SetMiddlewareJSON(s.LoginCallback)).
 		Methods("GET")
 
-		
 	// Users routes
 	s.Router.HandleFunc("/v1/users", middlewares.SetMiddlewareJSON(s.CreateUser)).Methods("POST")
 	s.Router.HandleFunc("/v1/users", middlewares.SetMiddlewareJSON(s.GetUsers)).Methods("GET")
+	s.Router.HandleFunc("/v1/users/profile", middlewares.SetMiddlewareJSON(s.GetUserProfile)).Methods("GET")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateUser))).Methods("PUT")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
 	s.Router.HandleFunc("/v1/users/{id}/matches", middlewares.SetMiddlewareAuthentication(s.GetRecentMatches)).Methods("GET")
 
 	// Matches
-	s.Router.HandleFunc("/v1/matches/{id}", middlewares.SetMiddlewareAuthentication(s.GetMatch)).Methods("GET")
+	s.Router.HandleFunc("/v1/matches/{id}", middlewares.SetMiddlewareJSON(s.GetMatch)).Methods("GET")
 
 	// ReviewRequests routes
 	s.Router.HandleFunc("/v1/requests", middlewares.SetMiddlewareJSON(s.CreateReviewRequest)).Methods("POST")
@@ -31,4 +31,11 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/v1/requests/{id}", middlewares.SetMiddlewareJSON(s.GetReviewRequest)).Methods("GET")
 	s.Router.HandleFunc("/v1/requests/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateReviewRequest))).Methods("PUT")
 	s.Router.HandleFunc("/v1/requests/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteReviewRequest)).Methods("DELETE")
+
+	// Reviews routes
+	s.Router.HandleFunc("/v1/reviews", middlewares.SetMiddlewareJSON(s.CreateReview)).Methods("POST")
+	s.Router.HandleFunc("/v1/reviews", middlewares.SetMiddlewareJSON(s.GetReviews)).Methods("GET")
+	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.SetMiddlewareJSON(s.GetReview)).Methods("GET")
+	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateReview))).Methods("PUT")
+	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteReview)).Methods("DELETE")
 }

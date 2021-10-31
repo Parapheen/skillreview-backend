@@ -1,0 +1,34 @@
+name: Production Deployment
+
+on:
+  workflow_dispatch:
+
+# env:
+#   TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+#   TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Push to dokku
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: 'ssh://dokku@54.243.138.79:22/skillreview-server'
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+  # telegram:
+  #   name: Telegram notification
+  #   runs-on: ubuntu-latest
+  #   needs: deploy
+  #   steps:
+  #     - uses: technote-space/workflow-conclusion-action@v1
+  #     - uses: appleboy/telegram-action@master
+  #       with:
+  #         to: ${{ env.TELEGRAM_TO }}
+  #         token: ${{ env.TELEGRAM_TOKEN }}
+  #         message: |
+  #           The deployment of brainrain backend finished with status ${{ env.WORKFLOW_CONCLUSION }}

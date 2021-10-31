@@ -12,14 +12,26 @@ import (
 
 type ReviewRequest struct {
 	Base
-	MatchId               uint32    `gorm:"not null" json:"match_id"`
-	Description           string    `gorm:"size:255;not null;" json:"description"`
-	Author                User      `json:"author"`
-	AuthorID              uint32    `gorm:"not null" json:"-"`
-	SelfRateLaning        int       `gorm:"not null" json:"self_rate_laning"`
-	SelfRateTeamFights    int       `gorm:"not null" json:"self_rate_teamfights"`
-	SelfRateOverall       int       `gorm:"not null" json:"self_rate_overall"`
+	MatchId            string       `gorm:"not null" json:"match_id"`
+	Description        string       `gorm:"size:255;not null;" json:"description"`
+	AuthorID           uint32       `gorm:"not null" json:"-"`
+	AuthorUID          uuid.UUID    `gorm:"not null" json:"author_uid"`
+	State              RequestState `gorm:"not null; default:'open'" json:"state"`
+	HeroPlayed         string       `gorm:"size:255;not null;" json:"hero_played"`
+	AuthorRank         string       `gorm:"not null;" json:"author_rank"`
+	SelfRateLaning     int          `gorm:"not null" json:"self_rate_laning"`
+	SelfRateTeamFights int          `gorm:"not null" json:"self_rate_teamfights"`
+	SelfRateOverall    int          `gorm:"not null" json:"self_rate_overall"`
+	Author             User         `gorm:"constraint:OnDelete:CASCADE;foreignkey:id" json:"author"`
+	Reviews            []Review     `gorm:"constraint:OnDelete:CASCADE;foreignkey:review_request_id" json:"reviews"`
 }
+
+type RequestState string
+
+const (
+	Open   RequestState = "open"
+	Closed RequestState = "closed"
+)
 
 func (rr *ReviewRequest) Prepare() {
 	rr.UUID = uuid.NewV4()
@@ -29,14 +41,34 @@ func (rr *ReviewRequest) Prepare() {
 	rr.UpdatedAt = time.Now()
 }
 
-func (rr *ReviewRequest) Validate() error {
-	if rr.Description == "" {
-		return errors.New("Required Content")
+func (rr *ReviewRequest) Validate(action string) error {
+	switch strings.ToLower(action) {
+	case "update":
+		if rr.Description == "" {
+			return errors.New("Required Content")
+		}
+		if rr.AuthorUID.String() == "" {
+			return errors.New("Required Author")
+		}
+		return nil
+	default:
+		if rr.Description == "" {
+			return errors.New("Required Content")
+		}
+		if rr.AuthorUID.String() == "" {
+			return errors.New("Required Author")
+		}
+		if rr.SelfRateLaning < 1 {
+			return errors.New("Required Self Laning Rating")
+		}
+		if rr.SelfRateTeamFights < 1 {
+			return errors.New("Required Self TeamFighting Rating")
+		}
+		if rr.SelfRateOverall < 1 {
+			return errors.New("Required Self Overall Rating")
+		}
+		return nil
 	}
-	if rr.AuthorID < 1 {
-		return errors.New("Required Author")
-	}
-	return nil
 }
 
 func (rr *ReviewRequest) SaveReviewRequest(db *gorm.DB) (*ReviewRequest, error) {
@@ -46,7 +78,7 @@ func (rr *ReviewRequest) SaveReviewRequest(db *gorm.DB) (*ReviewRequest, error) 
 		return &ReviewRequest{}, err
 	}
 	if rr.ID != 0 {
-		err = db.Model(&User{}).Where("id = ?", rr.AuthorID).Take(&rr.Author).Error
+		err = db.Model(&User{}).Where("uuid = ?", rr.AuthorUID).Take(&rr.Author).Error
 		if err != nil {
 			return &ReviewRequest{}, err
 		}
@@ -55,14 +87,13 @@ func (rr *ReviewRequest) SaveReviewRequest(db *gorm.DB) (*ReviewRequest, error) 
 }
 
 func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB) (*[]ReviewRequest, error) {
-	var err error
 	reviewRequests := []ReviewRequest{}
-	err = db.Model(&ReviewRequest{}).Limit(100).Find(&rr).Error
+	err := db.Model(&ReviewRequest{}).Limit(100).Preload("Reviews").Find(&reviewRequests).Error
 	if err != nil {
 		return &[]ReviewRequest{}, err
 	}
 	if len(reviewRequests) > 0 {
-		for i, _ := range reviewRequests {
+		for i := range reviewRequests {
 			err := db.Model(&User{}).Where("id = ?", reviewRequests[i].AuthorID).Take(&reviewRequests[i].Author).Error
 			if err != nil {
 				return &[]ReviewRequest{}, err
@@ -72,9 +103,9 @@ func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB) (*[]ReviewRequest, e
 	return &reviewRequests, nil
 }
 
-func (rr *ReviewRequest) FindReviewRequestByID(db *gorm.DB, pid uuid.UUID) (*ReviewRequest, error) {
+func (rr *ReviewRequest) FindReviewRequestByUIID(db *gorm.DB, pid uuid.UUID) (*ReviewRequest, error) {
 	var err error
-	err = db.Model(&ReviewRequest{}).Where("id = ?", pid).Take(&rr).Error
+	err = db.Model(&ReviewRequest{}).Where("uuid = ?", pid).Preload("Reviews").Preload("Reviews.Author").Take(&rr).Error
 	if err != nil {
 		return &ReviewRequest{}, err
 	}
@@ -88,20 +119,16 @@ func (rr *ReviewRequest) FindReviewRequestByID(db *gorm.DB, pid uuid.UUID) (*Rev
 }
 
 func (rr *ReviewRequest) UpdateReviewRequest(db *gorm.DB) (*ReviewRequest, error) {
-
-	var err error
-
-	db = db.Model(&ReviewRequest{}).Where("id = ?", rr.ID).Take(&ReviewRequest{}).UpdateColumns(
-		map[string]interface{}{
-			"description":  rr.Description,
-			"updated_at": time.Now(),
-		},
-	)
-	if db.Error != nil {
+	err := db.Model(&ReviewRequest{}).Where("id = ?", rr.ID).Updates(
+		ReviewRequest{
+			Description:     rr.Description,
+			State:           rr.State,
+	})
+	if err != nil {
 		return &ReviewRequest{}, db.Error
 	}
 	if rr.ID != 0 {
-		err = db.Model(&User{}).Where("id = ?", rr.AuthorID).Take(&rr.Author).Error
+		err := db.Model(&User{}).Where("id = ?", rr.AuthorID).Take(&rr.Author).Error
 		if err != nil {
 			return &ReviewRequest{}, err
 		}

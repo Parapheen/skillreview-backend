@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/Parapheen/skillreview-backend/api/auth"
 	"github.com/Parapheen/skillreview-backend/api/models"
@@ -15,21 +16,21 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request) {
+func (server *Server) CreateReview(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	reviewReq := models.ReviewRequest{}
-	err = json.Unmarshal(body, &reviewReq)
+	review := models.Review{}
+	err = json.Unmarshal(body, &review)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	reviewReq.Prepare()
-	err = reviewReq.Validate("")
+	review.Prepare()
+	err = review.Validate("")
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
@@ -50,12 +51,20 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	if userGotten.UUID != reviewReq.AuthorUID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
+	requestUUID, err := uuid.FromString(review.ReviewRequestUUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	reviewReq.AuthorID = userGotten.ID
-	reviewCreated, err := reviewReq.SaveReviewRequest(server.DB)
+	request := models.ReviewRequest{}
+	requestGotten, err := request.FindReviewRequestByUIID(server.DB, requestUUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	review.AuthorID = userGotten.ID
+	review.ReviewRequestID = requestGotten.ID
+	reviewCreated, err := review.SaveReview(server.DB)
 	if err != nil {
 		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
@@ -65,41 +74,41 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 	responses.JSON(w, http.StatusCreated, reviewCreated)
 }
 
-func (server *Server) GetReviewRequests(w http.ResponseWriter, r *http.Request) {
+func (server *Server) GetReviews(w http.ResponseWriter, r *http.Request) {
 
-	reviewReq := models.ReviewRequest{}
+	review := models.Review{}
 
-	reviewReqs, err := reviewReq.FindAllReviewRequests(server.DB)
+	reviews, err := review.FindAllReviews(server.DB)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	responses.JSON(w, http.StatusOK, reviewReqs)
+	responses.JSON(w, http.StatusOK, reviews)
 }
 
-func (server *Server) GetReviewRequest(w http.ResponseWriter, r *http.Request) {
+func (server *Server) GetReview(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	reviewReqId, err := uuid.FromString(vars["id"])
+	reviewId, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
-	reviewReq := models.ReviewRequest{}
+	review := models.Review{}
 
-	reviewReqReceived, err := reviewReq.FindReviewRequestByUIID(server.DB, reviewReqId)
+	reviewReceived, err := review.FindReviewByUIID(server.DB, reviewId)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	responses.JSON(w, http.StatusOK, reviewReqReceived)
+	responses.JSON(w, http.StatusOK, reviewReceived)
 }
 
-func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request) {
+func (server *Server) UpdateReview(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	reviewReqId, err := uuid.FromString(vars["id"])
+	reviewId, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -111,10 +120,10 @@ func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	reviewReq := models.ReviewRequest{}
-	reviewReqGotten, err := reviewReq.FindReviewRequestByUIID(server.DB, reviewReqId)
+	review := models.Review{}
+	err = server.DB.Model(models.ReviewRequest{}).Where("uuid = ?", reviewId).Take(&review).Error
 	if err != nil {
-		responses.ERROR(w, http.StatusNotFound, errors.New("Review Request not found"))
+		responses.ERROR(w, http.StatusNotFound, errors.New("Review not found"))
 		return
 	}
 	userUUID, err := uuid.FromString(uid)
@@ -128,48 +137,57 @@ func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	if userGotten.ID != reviewReqGotten.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+	reviewRequestUUID, err := uuid.FromString(review.ReviewRequestUUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-
+	request := models.ReviewRequest{}
+	requestGotten, err := request.FindReviewRequestByUIID(server.DB, reviewRequestUUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
+	
+	reviewUpdate := models.Review{}
+	err = json.Unmarshal(body, &reviewUpdate)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+	if userGotten.ID != review.AuthorID || userGotten.ID != requestGotten.Author.ID || userGotten.Steam64ID != os.Getenv("SUPER_ADMIN_STEAM64ID") {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
 
-	reviewReqUpdate := models.ReviewRequest{}
-	err = json.Unmarshal(body, &reviewReqUpdate)
+	reviewUpdate.Prepare()
+	err = reviewUpdate.Validate("update")
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	reviewReqUpdate.Prepare()
-	err = reviewReqUpdate.Validate("update")
-	if err != nil {
-		responses.ERROR(w, http.StatusUnprocessableEntity, err)
-		return
-	}
-
-	reviewReqUpdate.ID = reviewReqGotten.ID
-
-	postUpdated, err := reviewReqUpdate.UpdateReviewRequest(server.DB)
+	reviewUpdated, err := reviewUpdate.UpdateReview(server.DB, review.UUID)
 
 	if err != nil {
 		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
-	responses.JSON(w, http.StatusOK, postUpdated)
+	responses.JSON(w, http.StatusOK, reviewUpdated)
 }
 
-func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request) {
+func (server *Server) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	reviewReqId, err := uuid.FromString(vars["id"])
+	reviewId, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -181,8 +199,8 @@ func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	reviewReq := models.ReviewRequest{}
-	err = server.DB.Model(models.ReviewRequest{}).Where("id = ?", reviewReqId).Take(&reviewReq).Error
+	review := models.Review{}
+	err = server.DB.Model(models.Review{}).Where("id = ?", reviewId).Take(&review).Error
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Unauthorized"))
 		return
@@ -199,15 +217,15 @@ func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if userGotten.ID != reviewReq.AuthorID {
+	if userGotten.ID != review.AuthorID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	_, err = reviewReq.DeleteReviewRequest(server.DB, reviewReqId, userUUID)
+	_, err = review.DeleteReview(server.DB, reviewId, userUUID)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
-	w.Header().Set("Entity", fmt.Sprintf("%d", reviewReqId))
+	w.Header().Set("Entity", fmt.Sprintf("%d", reviewId))
 	responses.JSON(w, http.StatusNoContent, "")
 }
