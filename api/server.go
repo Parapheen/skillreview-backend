@@ -24,9 +24,7 @@ type ProviderIndex struct {
 func Run() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error getting env, not comming through %v", err)
-	} else {
-		fmt.Println("We are getting the env values")
+		log.Printf("Error getting env, not comming through %v", err)
 	}
 
 	goth.UseProviders(steam.New(
