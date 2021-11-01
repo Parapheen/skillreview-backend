@@ -30,10 +30,12 @@ WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage. Observe we also copied the .env file
 COPY --from=builder /usr/src/app/main .
-# COPY --from=builder /usr/src/app/migrations migrations
+COPY --from=builder /usr/src/app/.env .  
 
-# Expose port 80 to the outside world
-EXPOSE 80
+# RUN go get github.com/cespare/reflex
+
+# Expose port 8080 to the outside world
+EXPOSE 8080
 
 #Command to run the executable
 CMD ["./main"]
