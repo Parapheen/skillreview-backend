@@ -14,7 +14,7 @@ import (
 type User struct {
 	Base
 	Nickname       string          `gorm:"size:255;not null;unique" json:"nickname"`
-	Email          string          `gorm:"size:100;unique" json:"email"`
+	Email          string          `gorm:"size:100;" json:"email"`
 	Steam64ID      string          `gorm:"size:255;default:null;unique" json:"steam64Id"`
 	Steam32ID      string          `gorm:"size:255;default:null;unique" json:"steam32Id"`
 	Avatar         string          `gorm:"size:255;" json:"avatar"`
