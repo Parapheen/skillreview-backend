@@ -148,13 +148,13 @@ func (server *Server) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	
+
 	reviewUpdate := models.Review{}
 	err = json.Unmarshal(body, &reviewUpdate)
 	if err != nil {

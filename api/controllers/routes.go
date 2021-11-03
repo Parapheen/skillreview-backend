@@ -9,6 +9,9 @@ func (s *Server) initializeRoutes() {
 
 	// Login Route
 	s.Router.
+		HandleFunc("/v1/auth/{provider}",
+			middlewares.SetMiddlewareJSON(s.Login)).Methods("GET")
+	s.Router.
 		HandleFunc("/v1/auth/{provider}/callback",
 			middlewares.SetMiddlewareJSON(s.LoginCallback)).
 		Methods("GET")
@@ -16,7 +19,7 @@ func (s *Server) initializeRoutes() {
 	// Users routes
 	s.Router.HandleFunc("/v1/users", middlewares.SetMiddlewareJSON(s.CreateUser)).Methods("POST")
 	s.Router.HandleFunc("/v1/users", middlewares.SetMiddlewareJSON(s.GetUsers)).Methods("GET")
-	s.Router.HandleFunc("/v1/users/profile", middlewares.SetMiddlewareJSON(s.GetUserProfile)).Methods("GET")
+	s.Router.HandleFunc("/v1/users/profile", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateUser))).Methods("PUT")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")

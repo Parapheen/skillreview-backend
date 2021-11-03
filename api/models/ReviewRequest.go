@@ -121,9 +121,9 @@ func (rr *ReviewRequest) FindReviewRequestByUIID(db *gorm.DB, pid uuid.UUID) (*R
 func (rr *ReviewRequest) UpdateReviewRequest(db *gorm.DB) (*ReviewRequest, error) {
 	err := db.Model(&ReviewRequest{}).Where("id = ?", rr.ID).Updates(
 		ReviewRequest{
-			Description:     rr.Description,
-			State:           rr.State,
-	})
+			Description: rr.Description,
+			State:       rr.State,
+		})
 	if err != nil {
 		return &ReviewRequest{}, db.Error
 	}

@@ -12,15 +12,15 @@ import (
 
 type Review struct {
 	Base
-	ReviewRequestUUID  string      `gorm:"not null" json:"review_request_uuid"`
-	Description        string      `gorm:"size:255;not null;" json:"description"`
-	AuthorID           uint32      `gorm:"not null" json:"-"`
-	ReviewRequestID    uint32      `gorm:"not null" json:"-"`
-	State              ReviewState `gorm:"not null; default:'submitted'" json:"state"`
-	RateLaning         int         `gorm:"not null" json:"rate_laning"`
-	RateTeamFights     int         `gorm:"not null" json:"rate_teamfights"`
-	RateOverall        int         `gorm:"not null" json:"rate_overall"`
-	Author             User        `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"author"`
+	ReviewRequestUUID string      `gorm:"not null" json:"review_request_uuid"`
+	Description       string      `gorm:"size:255;not null;" json:"description"`
+	AuthorID          uint32      `gorm:"not null" json:"-"`
+	ReviewRequestID   uint32      `gorm:"not null" json:"-"`
+	State             ReviewState `gorm:"not null; default:'submitted'" json:"state"`
+	RateLaning        int         `gorm:"not null" json:"rate_laning"`
+	RateTeamFights    int         `gorm:"not null" json:"rate_teamfights"`
+	RateOverall       int         `gorm:"not null" json:"rate_overall"`
+	Author            User        `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"author"`
 }
 
 type ReviewState string
@@ -118,9 +118,9 @@ func (review *Review) UpdateReview(db *gorm.DB, reviewID uuid.UUID) (*Review, er
 
 	err := db.Model(&Review{}).Where("uuid = ?", reviewID).Updates(
 		Review{
-			Description:     review.Description,
-			State: review.State,
-	}).Error
+			Description: review.Description,
+			State:       review.State,
+		}).Error
 	if err != nil {
 		return &Review{}, db.Error
 	}

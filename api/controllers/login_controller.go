@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"net/url"
@@ -18,6 +19,7 @@ import (
 	"github.com/Parapheen/skillreview-backend/api/utils"
 	formaterror "github.com/Parapheen/skillreview-backend/api/utils"
 	"github.com/luanruisong/g-steam"
+	"github.com/markbates/goth/gothic"
 )
 
 func FetchUser(steamID string) (responses.Player, error) {
@@ -76,7 +78,7 @@ func CompleteAuth(vars url.Values) (string, error) {
 	}
 
 	steamIDSplit := strings.Split(openIDURL, "/")
-	steamID := steamIDSplit[len(steamIDSplit) - 1]
+	steamID := steamIDSplit[len(steamIDSplit)-1]
 	return steamID, nil
 }
 
@@ -128,21 +130,29 @@ func FetchUserRank(steamID string) (string, error) {
 	return rank, nil
 }
 
+func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
+	gothic.BeginAuthHandler(w, r)
+}
+
 func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Expose-Headers", "Authorization")
-	vars := r.URL.Query()
+	// w.Header().Set("Access-Control-Expose-Headers", "Authorization")
+	// vars := r.URL.Query()
 	// verify openid info
-	steamID, err := CompleteAuth(vars)
+	// steamID, err := CompleteAuth(vars)
+	authorizedUserInfo, err := gothic.CompleteUserAuth(w, r)
+	if err != nil {
+		log.Println(err)
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
 	user := models.User{}
-	userGotten, err := user.FindUserBySteamID(server.DB, steamID)
-	fmt.Printf("%+v %+v\n", userGotten, err)
-	fmt.Printf("%+v\n", steamID)
+	userGotten, err := user.FindUserBySteamID(server.DB, authorizedUserInfo.UserID)
 	if err != nil {
-		steamUser, err := FetchUser(steamID)
+		steamUser, err := FetchUser(authorizedUserInfo.UserID)
 		if err != nil {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return
@@ -182,7 +192,8 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
-		responses.JSON(w, http.StatusOK, userCreated)
+		w.Header().Set("Location", fmt.Sprintf("%s?accessToken=%s", os.Getenv("FRONTEND_URL"), token))
+		responses.JSON(w, http.StatusTemporaryRedirect, token)
 		return
 	}
 
@@ -192,6 +203,7 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	responses.JSON(w, http.StatusOK, userGotten)
+	w.Header().Set("Location", fmt.Sprintf("%s?accessToken=%s", os.Getenv("FRONTEND_URL"), token))
+	responses.JSON(w, http.StatusTemporaryRedirect, token)
 	return
 }
