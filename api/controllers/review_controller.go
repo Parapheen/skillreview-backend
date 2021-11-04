@@ -51,11 +51,7 @@ func (server *Server) CreateReview(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	requestUUID, err := uuid.FromString(review.ReviewRequestUUID)
-	if err != nil {
-		responses.ERROR(w, http.StatusInternalServerError, err)
-		return
-	}
+	requestUUID := review.ReviewRequestUUID
 	request := models.ReviewRequest{}
 	requestGotten, err := request.FindReviewRequestByUIID(server.DB, requestUUID)
 	if err != nil {
@@ -63,6 +59,7 @@ func (server *Server) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	review.AuthorID = userGotten.ID
+	review.AuthorUUID = userGotten.UUID
 	review.ReviewRequestID = requestGotten.ID
 	reviewCreated, err := review.SaveReview(server.DB)
 	if err != nil {
@@ -108,7 +105,7 @@ func (server *Server) UpdateReview(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	reviewId, err := uuid.FromString(vars["id"])
+	reviewUUID, err := uuid.FromString(vars["id"])
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -121,7 +118,7 @@ func (server *Server) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	review := models.Review{}
-	err = server.DB.Model(models.ReviewRequest{}).Where("uuid = ?", reviewId).Take(&review).Error
+	err = server.DB.Model(models.Review{}).Where("uuid = ?", reviewUUID).Take(&review).Error
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Review not found"))
 		return
@@ -137,11 +134,7 @@ func (server *Server) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	reviewRequestUUID, err := uuid.FromString(review.ReviewRequestUUID)
-	if err != nil {
-		responses.ERROR(w, http.StatusInternalServerError, err)
-		return
-	}
+	reviewRequestUUID := review.ReviewRequestUUID
 	request := models.ReviewRequest{}
 	requestGotten, err := request.FindReviewRequestByUIID(server.DB, reviewRequestUUID)
 	if err != nil {

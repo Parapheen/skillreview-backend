@@ -50,7 +50,7 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	if userGotten.UUID != reviewReq.AuthorUID {
+	if userGotten.UUID != reviewReq.AuthorUUID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
 	}

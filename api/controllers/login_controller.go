@@ -135,10 +135,6 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Access-Control-Expose-Headers", "Authorization")
-	// vars := r.URL.Query()
-	// verify openid info
-	// steamID, err := CompleteAuth(vars)
 	authorizedUserInfo, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		log.Println(err)

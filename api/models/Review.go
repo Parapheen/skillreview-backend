@@ -6,19 +6,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/gorm"
 )
 
 type Review struct {
 	Base
-	ReviewRequestUUID string      `gorm:"not null" json:"review_request_uuid"`
+	ReviewRequestUUID uuid.UUID   `gorm:"not null" json:"review_request_uuid"`
+	AuthorUUID        uuid.UUID   `gorm:"not null" json:"author_uuid"`
 	Description       string      `gorm:"size:255;not null;" json:"description"`
 	AuthorID          uint32      `gorm:"not null" json:"-"`
 	ReviewRequestID   uint32      `gorm:"not null" json:"-"`
 	State             ReviewState `gorm:"not null; default:'submitted'" json:"state"`
 	RateLaning        int         `gorm:"not null" json:"rate_laning"`
-	RateTeamFights    int         `gorm:"not null" json:"rate_teamfights"`
+	RateTeamfights    int         `gorm:"not null" json:"rate_teamfights"`
 	RateOverall       int         `gorm:"not null" json:"rate_overall"`
 	Author            User        `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"author"`
 }
@@ -26,9 +27,9 @@ type Review struct {
 type ReviewState string
 
 const (
-	Submitted RequestState = "submitted"
-	Accepted  RequestState = "accepted"
-	Reviewed  RequestState = "reviewed"
+	Submitted ReviewState = "submitted"
+	Accepted  ReviewState = "accepted"
+	Reviewed  ReviewState = "reviewed"
 )
 
 func (review *Review) Prepare() {
@@ -56,7 +57,7 @@ func (review *Review) Validate(action string) error {
 		if review.RateLaning < 1 {
 			return errors.New("Required Laning Rating")
 		}
-		if review.RateTeamFights < 1 {
+		if review.RateTeamfights < 1 {
 			return errors.New("Required TeamFighting Rating")
 		}
 		if review.RateOverall < 1 {
@@ -138,7 +139,7 @@ func (review *Review) DeleteReview(db *gorm.DB, pid uuid.UUID, uid uuid.UUID) (i
 	db = db.Model(&Review{}).Where("id = ? and author_id = ?", pid, uid).Take(&Review{}).Delete(&Review{})
 
 	if db.Error != nil {
-		if gorm.IsRecordNotFoundError(db.Error) {
+		if db.Error == gorm.ErrRecordNotFound {
 			return 0, errors.New("Review not found")
 		}
 		return 0, db.Error

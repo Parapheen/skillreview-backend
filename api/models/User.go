@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/badoux/checkmail"
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -27,8 +27,8 @@ type User struct {
 type PlanType string
 
 const (
-	Free    PlanType = "basic"
-	Premium PlanType = "pro"
+	Basic PlanType = "basic"
+	Pro   PlanType = "pro"
 )
 
 func (u *User) Prepare() {
@@ -83,9 +83,6 @@ func (u *User) FindUserByUIID(db *gorm.DB, uid uuid.UUID) (*User, error) {
 	err := db.Model(User{}).Where("uuid = ?", uid).Preload("ReviewRequests").Preload("ReviewRequests.Reviews").Preload("Reviews").Take(&u).Error
 	if err != nil {
 		return &User{}, err
-	}
-	if gorm.IsRecordNotFoundError(err) {
-		return &User{}, errors.New("User Not Found")
 	}
 	return u, nil
 }

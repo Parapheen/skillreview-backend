@@ -1,4 +1,4 @@
-FROM golang:1.15.3-alpine3.12 as builder
+FROM golang:1.16-alpine3.12 as builder
 
 # Install git.
 # Git is required for fetching the dependencies.
@@ -30,7 +30,8 @@ WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage. Observe we also copied the .env file
 COPY --from=builder /usr/src/app/main .
-COPY --from=builder /usr/src/app/.env .  
+COPY --from=builder /usr/src/app/.env .
+COPY --from=builder /usr/src/app/db/migrations migrations
 
 # RUN go get github.com/cespare/reflex
 

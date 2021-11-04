@@ -8,11 +8,14 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
-	_ "github.com/jinzhu/gorm/dialects/postgres" //postgres database driver
+	"gorm.io/driver/postgres"
 
-	"github.com/Parapheen/skillreview-backend/api/models"
+	"github.com/golang-migrate/migrate/v4"
+	migratePostgres "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
 )
 
 type Server struct {
@@ -32,16 +35,31 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 
 	var err error
 
-	DBURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
-	server.DB, err = gorm.Open(Dbdriver, DBURL)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
+	server.DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Printf("Cannot connect to %s database", Dbdriver)
 		log.Fatal("This is the error:", err)
 	} else {
 		fmt.Printf("We are connected to the %s database", Dbdriver)
 	}
-
-	server.DB.AutoMigrate(&models.User{}, &models.ReviewRequest{}, &models.Review{}) // database migration
+	db, err := server.DB.DB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	driver, err := migratePostgres.WithInstance(db, &migratePostgres.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://migrations",
+		"postgres", driver)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := m.Up(); err != nil {
+		log.Println(err)
+	}
 
 	server.Router = mux.NewRouter()
 

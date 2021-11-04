@@ -12,6 +12,7 @@ services:
       - ./:/usr/src/app
     depends_on:
       - skillreview_postgres
+      - skillreview_postgres_migrate
     networks:
       - skillreview
 
@@ -43,6 +44,23 @@ services:
   #   networks:
   #     - skillreview
   #   restart: unless-stopped
+  
+  skillreview_postgres_migrate:
+    image: migrate/migrate
+    command:
+      [
+        '-path',
+        '/db/migrations',
+        '-database',
+        'postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}?sslmode=disable',
+        'up',
+      ]
+    networks:
+      - skillreview
+    volumes:
+      - ./db/migrations:/db/migrations
+    depends_on:
+      - skillreview_postgres
 
 
 volumes:

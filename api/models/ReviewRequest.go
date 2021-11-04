@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/gorm"
 )
 
 type ReviewRequest struct {
@@ -15,12 +15,12 @@ type ReviewRequest struct {
 	MatchId            string       `gorm:"not null" json:"match_id"`
 	Description        string       `gorm:"size:255;not null;" json:"description"`
 	AuthorID           uint32       `gorm:"not null" json:"-"`
-	AuthorUID          uuid.UUID    `gorm:"not null" json:"author_uid"`
+	AuthorUUID         uuid.UUID    `gorm:"not null" json:"author_uuid"`
 	State              RequestState `gorm:"not null; default:'open'" json:"state"`
-	HeroPlayed         string       `gorm:"size:255;not null;" json:"hero_played"`
+	HeroPlayed         int          `gorm:"size:255;not null;" json:"hero_played"`
 	AuthorRank         string       `gorm:"not null;" json:"author_rank"`
 	SelfRateLaning     int          `gorm:"not null" json:"self_rate_laning"`
-	SelfRateTeamFights int          `gorm:"not null" json:"self_rate_teamfights"`
+	SelfRateTeamfights int          `gorm:"not null" json:"self_rate_teamfights"`
 	SelfRateOverall    int          `gorm:"not null" json:"self_rate_overall"`
 	Author             User         `gorm:"constraint:OnDelete:CASCADE;foreignkey:id" json:"author"`
 	Reviews            []Review     `gorm:"constraint:OnDelete:CASCADE;foreignkey:review_request_id" json:"reviews"`
@@ -47,7 +47,7 @@ func (rr *ReviewRequest) Validate(action string) error {
 		if rr.Description == "" {
 			return errors.New("Required Content")
 		}
-		if rr.AuthorUID.String() == "" {
+		if rr.AuthorUUID.String() == "" {
 			return errors.New("Required Author")
 		}
 		return nil
@@ -55,13 +55,13 @@ func (rr *ReviewRequest) Validate(action string) error {
 		if rr.Description == "" {
 			return errors.New("Required Content")
 		}
-		if rr.AuthorUID.String() == "" {
+		if rr.AuthorUUID.String() == "" {
 			return errors.New("Required Author")
 		}
 		if rr.SelfRateLaning < 1 {
 			return errors.New("Required Self Laning Rating")
 		}
-		if rr.SelfRateTeamFights < 1 {
+		if rr.SelfRateTeamfights < 1 {
 			return errors.New("Required Self TeamFighting Rating")
 		}
 		if rr.SelfRateOverall < 1 {
@@ -78,7 +78,7 @@ func (rr *ReviewRequest) SaveReviewRequest(db *gorm.DB) (*ReviewRequest, error) 
 		return &ReviewRequest{}, err
 	}
 	if rr.ID != 0 {
-		err = db.Model(&User{}).Where("uuid = ?", rr.AuthorUID).Take(&rr.Author).Error
+		err = db.Model(&User{}).Where("uuid = ?", rr.AuthorUUID).Take(&rr.Author).Error
 		if err != nil {
 			return &ReviewRequest{}, err
 		}
@@ -141,7 +141,7 @@ func (rr *ReviewRequest) DeleteReviewRequest(db *gorm.DB, pid uuid.UUID, uid uui
 	db = db.Model(&ReviewRequest{}).Where("id = ? and author_id = ?", pid, uid).Take(&ReviewRequest{}).Delete(&ReviewRequest{})
 
 	if db.Error != nil {
-		if gorm.IsRecordNotFoundError(db.Error) {
+		if db.Error == gorm.ErrRecordNotFound {
 			return 0, errors.New("Post not found")
 		}
 		return 0, db.Error

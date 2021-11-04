@@ -1,4 +1,4 @@
-FROM golang:1.15.3-alpine3.12 as builder
+FROM golang:1.16-alpine3.12 as builder
 
 # Install git.
 # Git is required for fetching the dependencies.
@@ -28,9 +28,9 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 
-# Copy the Pre-built binary file from the previous stage. Observe we also copied the .env file
+# Copy the Pre-built binary file from the previous stage.
 COPY --from=builder /usr/src/app/main .
-# COPY --from=builder /usr/src/app/migrations migrations
+COPY --from=builder /usr/src/app/db/migrations migrations
 
 # Expose port 80 to the outside world
 EXPOSE 80

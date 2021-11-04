@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  skillreview_backend_test:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    environment:
+      - TEST_DB_HOST=skillreview_postgres_test
+      - TEST_DB_DRIVER=postgres
+      - TEST_DB_USER=username
+      - TEST_DB_PASSWORD=password
+      - TEST_DB_NAME=test
+      - TEST_DB_PORT=5432
+    volumes:
+      - ./:/app/src/app/
+    depends_on:
+      - skillreview_postgres_test
+    networks:
+      - skillreview_test
+
+  skillreview_postgres_test:
+    image: postgres:latest
+    # environment:
+    #   - POSTGRES_USER=${TEST_DB_USER}
+    #   - POSTGRES_PASSWORD=${TEST_DB_PASSWORD}
+    #   - POSTGRES_DB=${TEST_DB_NAME}
+    #   - DATABASE_HOST=${TEST_DB_HOST}
+    ports:
+      - 5555:5432
+    volumes:
+      - database_postgres_test:/var/lib/postgresql/data
+    networks:
+      - skillreview_test
+
+volumes:
+  database_postgres_test:
+
+networks:
+  skillreview_test:
+    driver: bridge
