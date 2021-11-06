@@ -83,8 +83,8 @@ func Database() {
 	err = server.DB.AutoMigrate(
 		&models.Base{},
 		&models.User{},
-		// &models.Review{},
-		// &models.ReviewRequest{},
+		&models.Review{},
+		&models.ReviewRequest{},
 	)
 	if err != nil {
 		log.Fatal("This is the error:", err)

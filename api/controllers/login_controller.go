@@ -201,5 +201,4 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	w.Header().Set("Location", fmt.Sprintf("%s?accessToken=%s", os.Getenv("FRONTEND_URL"), token))
 	responses.JSON(w, http.StatusTemporaryRedirect, token)
-	return
 }

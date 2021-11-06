@@ -59,7 +59,7 @@ func TestGetUserByUuid(t *testing.T) {
 	assert.Equal(t, foundUser.UUID, user.UUID)
 	assert.Equal(t, foundUser.Email, user.Email)
 	assert.Equal(t, foundUser.Nickname, user.Nickname)
-	assert.Equal(t, len(user.ReviewRequests), 1)
+	assert.Equal(t, len(foundUser.ReviewRequests), 1)
 }
 
 func TestUpdateUser(t *testing.T) {
