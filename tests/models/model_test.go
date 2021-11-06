@@ -80,21 +80,11 @@ func Database() {
 		fmt.Printf("We are connected to the %s database\n", TestDbDriver)
 	}
 
-	err = server.DB.Migrator().DropTable(
-		&models.Base{},
-		&models.User{},
-		&models.ReviewRequest{},
-		&models.Review{},
-	)
-	if err != nil {
-		log.Fatal("This is the error:", err)
-	}
-
 	err = server.DB.AutoMigrate(
 		&models.Base{},
 		&models.User{},
-		&models.Review{},
-		&models.ReviewRequest{},
+		// &models.Review{},
+		// &models.ReviewRequest{},
 	)
 	if err != nil {
 		log.Fatal("This is the error:", err)
@@ -124,8 +114,8 @@ func refreshDatabase() error {
 	err := server.DB.Migrator().DropTable(
 		&models.Base{},
 		&models.User{},
-		&models.ReviewRequest{},
-		&models.Review{},
+		// &models.ReviewRequest{},
+		// &models.Review{},
 	)
 	if err != nil {
 		return err
@@ -133,8 +123,8 @@ func refreshDatabase() error {
 	err = server.DB.AutoMigrate(
 		&models.Base{},
 		&models.User{},
-		&models.ReviewRequest{},
-		&models.Review{},
+		// &models.ReviewRequest{},
+		// &models.Review{},
 	)
 	if err != nil {
 		return err
