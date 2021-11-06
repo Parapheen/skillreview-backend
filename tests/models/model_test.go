@@ -114,8 +114,8 @@ func refreshDatabase() error {
 	err := server.DB.Migrator().DropTable(
 		&models.Base{},
 		&models.User{},
-		// &models.ReviewRequest{},
-		// &models.Review{},
+		&models.ReviewRequest{},
+		&models.Review{},
 	)
 	if err != nil {
 		return err
@@ -123,8 +123,8 @@ func refreshDatabase() error {
 	err = server.DB.AutoMigrate(
 		&models.Base{},
 		&models.User{},
-		// &models.ReviewRequest{},
-		// &models.Review{},
+		&models.ReviewRequest{},
+		&models.Review{},
 	)
 	if err != nil {
 		return err
@@ -155,7 +155,6 @@ func seedOneUserAndOneReviewRequest() (models.ReviewRequest, models.User, error)
 		SelfRateOverall:    faker.RandomInt(1, 4),
 		State:              models.Open,
 		AuthorID:           user.ID,
-		AuthorUUID:         user.UUID,
 	}
 	err = server.DB.Model(&models.ReviewRequest{}).Create(&rr).Error
 	if err != nil {
@@ -186,7 +185,6 @@ func seedOneUserAndOneReviewRequestAndOneReview() (models.ReviewRequest, models.
 		SelfRateOverall:    faker.RandomInt(1, 4),
 		State:              models.Open,
 		AuthorID:           user.ID,
-		AuthorUUID:         user.UUID,
 	}
 	err = server.DB.Model(&models.ReviewRequest{}).Create(&rr).Error
 	if err != nil {
@@ -231,7 +229,6 @@ func seedOneUserAndOneReviewRequestAndReviews() (models.ReviewRequest, models.Us
 		SelfRateOverall:    faker.RandomInt(1, 4),
 		State:              models.Open,
 		AuthorID:           user.ID,
-		AuthorUUID:         user.UUID,
 	}
 	err = server.DB.Model(&models.ReviewRequest{}).Create(&rr).Error
 	if err != nil {
@@ -321,7 +318,6 @@ func seedUserAndRequestReviews() ([]models.User, []models.ReviewRequest, error) 
 			log.Fatalf("cannot seed users table: %v", err)
 		}
 		reviewRequests[i].AuthorID = users[i].ID
-		reviewRequests[i].AuthorUUID = users[i].UUID
 
 		err = server.DB.Model(&models.ReviewRequest{}).Create(&reviewRequests[i]).Error
 		if err != nil {

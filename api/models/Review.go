@@ -13,15 +13,14 @@ import (
 type Review struct {
 	Base
 	ReviewRequestUUID uuid.UUID   `gorm:"not null" json:"review_request_uuid"`
-	AuthorUUID        uuid.UUID   `gorm:"not null" json:"author_uuid"`
 	Description       string      `gorm:"size:255;not null;" json:"description"`
-	AuthorID          uint32      `gorm:"not null" json:"-"`
 	ReviewRequestID   uint32      `gorm:"not null" json:"-"`
 	State             ReviewState `gorm:"not null; default:'submitted'" json:"state"`
 	RateLaning        int         `gorm:"not null" json:"rate_laning"`
 	RateTeamfights    int         `gorm:"not null" json:"rate_teamfights"`
 	RateOverall       int         `gorm:"not null" json:"rate_overall"`
-	Author            User        `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"author"`
+	AuthorID          uint32      `gorm:"not null" json:"-"`
+	Author            User        `json:"author"`
 }
 
 type ReviewState string

@@ -79,8 +79,8 @@ func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 	return &users, nil
 }
 
-func (u *User) FindUserByUIID(db *gorm.DB, uid uuid.UUID) (*User, error) {
-	err := db.Model(User{}).Where("uuid = ?", uid).Preload("ReviewRequests").Preload("ReviewRequests.Reviews").Preload("Reviews").Take(&u).Error
+func (u *User) FindUserByUIID(db *gorm.DB, uuid uuid.UUID) (*User, error) {
+	err := db.Model(User{}).Where("uuid = ?", uuid).Preload("ReviewRequests").Preload("ReviewRequests.Reviews").Preload("Reviews").Take(&u).Error
 	if err != nil {
 		return &User{}, err
 	}
@@ -95,9 +95,9 @@ func (u *User) FindUserBySteamID(db *gorm.DB, steam64Id string) (*User, error) {
 	return u, nil
 }
 
-func (u *User) UpdateUser(db *gorm.DB, uid uuid.UUID) (*User, error) {
+func (u *User) UpdateUser(db *gorm.DB, uuid uuid.UUID) (*User, error) {
 
-	db = db.Model(&User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
+	db = db.Model(&User{}).Where("uuid = ?", uuid).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
 			"nickname":   u.Nickname,
 			"email":      u.Email,
@@ -108,16 +108,16 @@ func (u *User) UpdateUser(db *gorm.DB, uid uuid.UUID) (*User, error) {
 		return &User{}, db.Error
 	}
 	// This is the display the updated user
-	err := db.Model(&User{}).Where("id = ?", uid).Take(&u).Error
+	err := db.Model(&User{}).Where("uuid = ?", uuid).Take(&u).Error
 	if err != nil {
 		return &User{}, err
 	}
 	return u, nil
 }
 
-func (u *User) DeleteUser(db *gorm.DB, uid uuid.UUID) (int64, error) {
+func (u *User) DeleteUser(db *gorm.DB, uuid uuid.UUID) (int64, error) {
 
-	db = db.Model(&User{}).Where("id = ?", uid).Take(&User{}).Delete(&User{})
+	db = db.Model(&User{}).Where("uuid = ?", uuid).Take(&User{}).Delete(&User{})
 
 	if db.Error != nil {
 		return 0, db.Error

@@ -50,11 +50,8 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	if userGotten.UUID != reviewReq.AuthorUUID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
-		return
-	}
 	reviewReq.AuthorID = userGotten.ID
+	reviewReq.Author = *userGotten
 	reviewCreated, err := reviewReq.SaveReviewRequest(server.DB)
 	if err != nil {
 		formattedError := utils.FormatError(err.Error())

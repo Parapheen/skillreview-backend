@@ -14,15 +14,14 @@ type ReviewRequest struct {
 	Base
 	MatchId            string       `gorm:"not null" json:"match_id"`
 	Description        string       `gorm:"size:255;not null;" json:"description"`
-	AuthorID           uint32       `gorm:"not null" json:"-"`
-	AuthorUUID         uuid.UUID    `gorm:"not null" json:"author_uuid"`
 	State              RequestState `gorm:"not null; default:'open'" json:"state"`
 	HeroPlayed         int          `gorm:"size:255;not null;" json:"hero_played"`
 	AuthorRank         string       `gorm:"not null;" json:"author_rank"`
 	SelfRateLaning     int          `gorm:"not null" json:"self_rate_laning"`
 	SelfRateTeamfights int          `gorm:"not null" json:"self_rate_teamfights"`
 	SelfRateOverall    int          `gorm:"not null" json:"self_rate_overall"`
-	Author             User         `gorm:"constraint:OnDelete:CASCADE;foreignkey:id" json:"author"`
+	AuthorID           uint32       `gorm:"not null" json:"-"`
+	Author             User         `json:"author"`
 	Reviews            []Review     `gorm:"constraint:OnDelete:CASCADE;foreignkey:review_request_id" json:"reviews"`
 }
 
@@ -47,7 +46,7 @@ func (rr *ReviewRequest) Validate(action string) error {
 		if rr.Description == "" {
 			return errors.New("Required Content")
 		}
-		if rr.AuthorUUID.String() == "" {
+		if rr.Author.UUID.String() == "" {
 			return errors.New("Required Author")
 		}
 		return nil
@@ -55,7 +54,7 @@ func (rr *ReviewRequest) Validate(action string) error {
 		if rr.Description == "" {
 			return errors.New("Required Content")
 		}
-		if rr.AuthorUUID.String() == "" {
+		if rr.Author.UUID.String() == "" {
 			return errors.New("Required Author")
 		}
 		if rr.SelfRateLaning < 1 {
@@ -78,7 +77,7 @@ func (rr *ReviewRequest) SaveReviewRequest(db *gorm.DB) (*ReviewRequest, error) 
 		return &ReviewRequest{}, err
 	}
 	if rr.ID != 0 {
-		err = db.Model(&User{}).Where("uuid = ?", rr.AuthorUUID).Take(&rr.Author).Error
+		err = db.Model(&User{}).Where("uuid = ?", rr.Author.UUID).Take(&rr.Author).Error
 		if err != nil {
 			return &ReviewRequest{}, err
 		}

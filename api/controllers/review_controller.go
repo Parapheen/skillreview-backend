@@ -59,7 +59,6 @@ func (server *Server) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	review.AuthorID = userGotten.ID
-	review.AuthorUUID = userGotten.UUID
 	review.ReviewRequestID = requestGotten.ID
 	reviewCreated, err := review.SaveReview(server.DB)
 	if err != nil {

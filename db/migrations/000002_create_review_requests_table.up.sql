@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS "review_requests" (
   "id" bigserial,
   "uuid" char(36) UNIQUE,
-  "author_uuid" char(36) UNIQUE,
   "author_id" bigserial,
   "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP,
   "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP,

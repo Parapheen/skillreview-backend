@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS "reviews" (
   "id" bigserial,
   "uuid" char(36) UNIQUE,
-  "author_uuid" char(36) UNIQUE,
   "author_id" bigserial,
   "review_request_uuid" char(36) UNIQUE,
   "review_request_id" bigserial,
