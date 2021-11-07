@@ -1,21 +1,18 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
-	"net/url"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/Parapheen/skillreview-backend/api/auth"
+	"github.com/Parapheen/skillreview-backend/api/domain/stats_man_domain"
 	"github.com/Parapheen/skillreview-backend/api/models"
 	"github.com/Parapheen/skillreview-backend/api/responses"
+	"github.com/Parapheen/skillreview-backend/api/services"
 	"github.com/Parapheen/skillreview-backend/api/utils"
 	formaterror "github.com/Parapheen/skillreview-backend/api/utils"
 	"github.com/luanruisong/g-steam"
@@ -36,50 +33,6 @@ func FetchUser(steamID string) (responses.Player, error) {
 	}
 	player := resp.Response.Players[0]
 	return player, nil
-}
-
-func CompleteAuth(vars url.Values) (string, error) {
-	v := make(url.Values)
-	v.Set("openid.assoc_handle", vars.Get("openid.assoc_handle"))
-	v.Set("openid.signed", vars.Get("openid.signed"))
-	v.Set("openid.sig", vars.Get("openid.sig"))
-	v.Set("openid.ns", vars.Get("openid.ns"))
-
-	split := strings.Split(vars.Get("openid.signed"), ",")
-	for _, item := range split {
-		v.Set("openid."+item, vars.Get("openid."+item))
-	}
-	v.Set("openid.mode", "check_authentication")
-	client := http.DefaultClient
-
-	resp, err := client.PostForm("https://steamcommunity.com/openid/login", v)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	response := strings.Split(string(content), "\n")
-	if response[0] != "ns:"+"http://specs.openid.net/auth/2.0" {
-		return "", errors.New("Wrong ns in the response.")
-	}
-
-	if response[1] == "is_valid:false" {
-		return "", errors.New("Unable validate openId.")
-	}
-
-	openIDURL := vars.Get("openid.claimed_id")
-	validationRegExp := regexp.MustCompile("^(http|https)://steamcommunity.com/openid/id/[0-9]{15,25}$")
-	if !validationRegExp.MatchString(openIDURL) {
-		return "", errors.New("Invalid Steam ID pattern.")
-	}
-
-	steamIDSplit := strings.Split(openIDURL, "/")
-	steamID := steamIDSplit[len(steamIDSplit)-1]
-	return steamID, nil
 }
 
 func ConvertRankToMedal(rankTier int) (string, error) {
@@ -107,22 +60,14 @@ func ConvertRankToMedal(rankTier int) (string, error) {
 }
 
 func FetchUserRank(steamID string) (string, error) {
-	client := http.DefaultClient
-	stats := responses.UserStatsResponse{}
+	request := stats_man_domain.ProfileRequest{
+		Steam64ID: steamID,
+	}
+	stats, apiError := services.StatsManService.GetUserProfileStats(request)
+	if apiError != nil {
+		return "", errors.New(apiError.Message())
+	}
 
-	resp, err := client.Get(fmt.Sprintf("%sprofiles/%s/card", os.Getenv("STATS_API"), steamID))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	err = json.Unmarshal(content, &stats)
-	if err != nil {
-		return "", err
-	}
 	rank, err := ConvertRankToMedal(stats.RankTier)
 	if err != nil {
 		return "", err

@@ -117,12 +117,12 @@ func (rr *ReviewRequest) FindReviewRequestByUIID(db *gorm.DB, pid uuid.UUID) (*R
 	return rr, nil
 }
 
-func (rr *ReviewRequest) UpdateReviewRequest(db *gorm.DB) (*ReviewRequest, error) {
-	err := db.Model(&ReviewRequest{}).Where("id = ?", rr.ID).Updates(
+func (rr *ReviewRequest) UpdateReviewRequest(db *gorm.DB, rrUUID uuid.UUID) (*ReviewRequest, error) {
+	err := db.Model(&ReviewRequest{}).Where("uuid = ?", rrUUID).Updates(
 		ReviewRequest{
 			Description: rr.Description,
 			State:       rr.State,
-		})
+		}).Error
 	if err != nil {
 		return &ReviewRequest{}, db.Error
 	}

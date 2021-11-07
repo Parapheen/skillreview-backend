@@ -14,5 +14,14 @@ test:
 
 cleanf:
 	docker-compose down --remove-orphan --volumes
+	docker volume rm backend_database_postgres_test
 
-.PHONY: dev_migratedown dev_migrateup
+lint:
+	golangci-lint run
+
+format:
+	gofmt -w .
+
+retest: cleanf test
+
+.PHONY: dev_migratedown dev_migrateup test cleanf lint format

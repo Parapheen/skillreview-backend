@@ -114,9 +114,9 @@ func (review *Review) FindReviewByUIID(db *gorm.DB, pid uuid.UUID) (*Review, err
 	return review, nil
 }
 
-func (review *Review) UpdateReview(db *gorm.DB, reviewID uuid.UUID) (*Review, error) {
+func (review *Review) UpdateReview(db *gorm.DB, reviewUUID uuid.UUID) (*Review, error) {
 
-	err := db.Model(&Review{}).Where("uuid = ?", reviewID).Updates(
+	err := db.Model(&Review{}).Where("uuid = ?", reviewUUID).Updates(
 		Review{
 			Description: review.Description,
 			State:       review.State,
