@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Parapheen/skillreview-backend/api/middlewares"
 	"github.com/gorilla/mux"
 	"gopkg.in/go-playground/assert.v1"
 )
@@ -50,8 +49,7 @@ func TestGetReviewRequestByID(t *testing.T) {
 		req = mux.SetURLVars(req, map[string]string{"id": v.id})
 
 		rr := httptest.NewRecorder()
-		handler := http.HandlerFunc(
-			middlewares.Authenticate(server.GetReviewRequest, server.DB))
+		handler := http.HandlerFunc(server.GetReviewRequest)
 
 		handler.ServeHTTP(rr, req)
 
@@ -63,9 +61,6 @@ func TestGetReviewRequestByID(t *testing.T) {
 
 		if v.statusCode == 200 {
 			assert.Equal(t, reqr.Description, responseMap["description"])
-			assert.Equal(t, reqr.SelfRateLaning, responseMap["self_rate_laning"])
-			assert.Equal(t, reqr.SelfRateTeamfights, responseMap["self_rate_teamfights"])
-			assert.Equal(t, reqr.SelfRateOverall, responseMap["self_rate_overall"])
 			assert.Equal(t, reqr.UUID.String(), responseMap["id"])
 		}
 	}
