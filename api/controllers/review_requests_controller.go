@@ -50,11 +50,8 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	if userGotten.UUID != reviewReq.AuthorUUID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
-		return
-	}
 	reviewReq.AuthorID = userGotten.ID
+	reviewReq.Author = *userGotten
 	reviewCreated, err := reviewReq.SaveReviewRequest(server.DB)
 	if err != nil {
 		formattedError := utils.FormatError(err.Error())
@@ -153,16 +150,14 @@ func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	reviewReqUpdate.ID = reviewReqGotten.ID
-
-	postUpdated, err := reviewReqUpdate.UpdateReviewRequest(server.DB)
+	rrUpdated, err := reviewReqUpdate.UpdateReviewRequest(server.DB, reviewReqGotten.UUID)
 
 	if err != nil {
 		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
-	responses.JSON(w, http.StatusOK, postUpdated)
+	responses.JSON(w, http.StatusOK, rrUpdated)
 }
 
 func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request) {

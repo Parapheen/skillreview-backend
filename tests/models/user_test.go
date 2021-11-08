@@ -28,7 +28,35 @@ func TestSaveUser(t *testing.T) {
 	}
 	savedUser, err := newUser.SaveUser(server.DB)
 	if err != nil {
-		t.Errorf("this is the error getting the users: %v\n", err)
+		t.Errorf("this is the error creating a user: %v\n", err)
+		return
+	}
+	assert.Equal(t, newUser.UUID, savedUser.UUID)
+	assert.Equal(t, newUser.ID, savedUser.ID)
+	assert.Equal(t, newUser.Email, savedUser.Email)
+	assert.Equal(t, newUser.Nickname, savedUser.Nickname)
+	assert.Equal(t, newUser.Avatar, savedUser.Avatar)
+	assert.Equal(t, newUser.Rank, savedUser.Rank)
+}
+
+func TestSaveUserDashedNickname(t *testing.T) {
+
+	err := refreshDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+	newUser := models.User{
+		Nickname:  "TAGANROK-MOSCOW",
+		Email:     faker.Internet().Email(),
+		Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:    faker.Internet().Url(),
+		Rank:      "Ancient 4",
+		Plan:      models.Basic,
+	}
+	savedUser, err := newUser.SaveUser(server.DB)
+	if err != nil {
+		t.Errorf("this is the error creating a user: %v\n", err)
 		return
 	}
 	assert.Equal(t, newUser.UUID, savedUser.UUID)
@@ -48,7 +76,7 @@ func TestGetUserByUuid(t *testing.T) {
 
 	_, user, err := seedOneUserAndOneReviewRequest()
 	if err != nil {
-		log.Fatalf("cannot seed users table: %v", err)
+		log.Fatalf("cannot seed user and review request: %v", err)
 	}
 	foundUser, err := userInstance.FindUserByUIID(server.DB, user.UUID)
 	if err != nil {
@@ -59,7 +87,7 @@ func TestGetUserByUuid(t *testing.T) {
 	assert.Equal(t, foundUser.UUID, user.UUID)
 	assert.Equal(t, foundUser.Email, user.Email)
 	assert.Equal(t, foundUser.Nickname, user.Nickname)
-	assert.Equal(t, len(user.ReviewRequests), 1)
+	assert.Equal(t, len(foundUser.ReviewRequests), 1)
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -83,6 +111,6 @@ func TestUpdateUser(t *testing.T) {
 		t.Errorf("this is the error updating the user: %v\n", err)
 		return
 	}
-	assert.Equal(t, updatedUser.Email, updatedUser.Email)
-	assert.Equal(t, updatedUser.Nickname, updatedUser.Nickname)
+	assert.Equal(t, updatedUser.Email, userUpdate.Email)
+	assert.Equal(t, updatedUser.Nickname, userUpdate.Nickname)
 }
