@@ -18,7 +18,7 @@ func TestGetReviewRequestByID(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	reqr, user, err := seedOneUserAndOneReviewRequest()
+	reqr, _, err := seedOneUserAndOneReviewRequest()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,9 +33,9 @@ func TestGetReviewRequestByID(t *testing.T) {
 		errorMessage         string
 	}{
 		{
-			id:                   user.UUID.String(),
+			id:                   reqr.UUID.String(),
 			statusCode:           200,
-			description:          user.Nickname,
+			description:          reqr.Description,
 			self_rate_laning:     reqr.SelfRateLaning,
 			self_rate_teamfights: reqr.SelfRateTeamfights,
 			self_rate_overall:    reqr.SelfRateOverall,
