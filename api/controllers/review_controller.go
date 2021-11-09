@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/Parapheen/skillreview-backend/api/auth"
+	"github.com/Parapheen/skillreview-backend/api/clients"
 	"github.com/Parapheen/skillreview-backend/api/models"
 	"github.com/Parapheen/skillreview-backend/api/responses"
 	"github.com/Parapheen/skillreview-backend/api/utils"
@@ -58,6 +59,12 @@ func (server *Server) CreateReview(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
+	requestAuthor := models.User{}
+	authorGotten, err := requestAuthor.FindUserByUIID(server.DB, requestGotten.Author.UUID)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
 	review.AuthorID = userGotten.ID
 	review.ReviewRequestID = requestGotten.ID
 	reviewCreated, err := review.SaveReview(server.DB)
@@ -65,6 +72,10 @@ func (server *Server) CreateReview(w http.ResponseWriter, r *http.Request) {
 		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
+	}
+	if authorGotten.Email != "" {
+		requestURL := fmt.Sprintf("%srequests/%s", os.Getenv("FRONTEND_URL"), request.UUID.String())
+		defer clients.EmailClientStruct.NewReview(authorGotten.Email, authorGotten.Nickname, requestURL, request.MatchId)
 	}
 	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, reviewCreated.ID))
 	responses.JSON(w, http.StatusCreated, reviewCreated)

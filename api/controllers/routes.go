@@ -21,8 +21,8 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/v1/users", middlewares.SetMiddlewareJSON(s.GetUsers)).Methods("GET")
 	s.Router.HandleFunc("/v1/users/me", middlewares.SetMiddlewareJSON(middlewares.Authenticate(s.GetLoggedUser, s.DB))).Methods("GET")
 	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
-	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(middlewares.AdminAuthentication(s.UpdateUser))).Methods("PUT")
-	s.Router.HandleFunc("/v1/users/{id}", middlewares.AdminAuthentication(s.DeleteUser)).Methods("DELETE")
+	s.Router.HandleFunc("/v1/users/{id}", middlewares.SetMiddlewareJSON(middlewares.AdminAuthentication(s.UpdateUser, s.DB))).Methods("PUT")
+	s.Router.HandleFunc("/v1/users/{id}", middlewares.AdminAuthentication(s.DeleteUser, s.DB)).Methods("DELETE")
 	s.Router.HandleFunc("/v1/users/{id}/matches", middlewares.SetMiddlewareJSON(middlewares.Authenticate(s.GetRecentMatches, s.DB))).Methods("GET")
 
 	// Matches

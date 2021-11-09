@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/Parapheen/skillreview-backend/api/clients"
 	"github.com/Parapheen/skillreview-backend/api/domain/stats_man_domain"
 	"github.com/Parapheen/skillreview-backend/api/models"
 	"github.com/Parapheen/skillreview-backend/api/responses"
@@ -81,7 +82,7 @@ func (server *Server) GetLoggedUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
-
+	gottenUser := context.Get(r, "user").(*models.User)
 	vars := mux.Vars(r)
 	uid, err := uuid.FromString(vars["id"])
 	if err != nil {
@@ -111,6 +112,9 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		formattedError := utils.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
+	}
+	if user.Email != "" && gottenUser.Email == "" {
+		defer clients.EmailClientStruct.Greet(user.Email, updatedUser.Nickname)
 	}
 	responses.JSON(w, http.StatusOK, updatedUser)
 }

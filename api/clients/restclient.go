@@ -1,4 +1,4 @@
-package restclient
+package clients
 
 import (
 	"net/http"
