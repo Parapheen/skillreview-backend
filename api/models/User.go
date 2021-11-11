@@ -33,7 +33,7 @@ const (
 
 func (u *User) Prepare() {
 	u.UUID = uuid.NewV4()
-	u.Nickname = html.EscapeString(strings.TrimSpace(u.Nickname))
+	u.Nickname = strings.TrimSpace(u.Nickname)
 	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
