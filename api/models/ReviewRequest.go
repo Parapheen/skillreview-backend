@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"html"
 	"strings"
 	"time"
 
@@ -34,7 +33,7 @@ const (
 
 func (rr *ReviewRequest) Prepare() {
 	rr.UUID = uuid.NewV4()
-	rr.Description = html.EscapeString(strings.TrimSpace(rr.Description))
+	rr.Description = strings.TrimSpace(rr.Description)
 	rr.Author = User{}
 	rr.CreatedAt = time.Now()
 	rr.UpdatedAt = time.Now()

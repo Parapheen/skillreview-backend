@@ -39,7 +39,7 @@ func TestGetRecentMatchesNoError(t *testing.T) {
 			Body:       ioutil.NopCloser(strings.NewReader(profileStatsResponse)),
 		}, nil
 	}
-	restclient.ClientStruct = &getClientMock{} //without this line, the real api is fired
+	clients.ClientStruct = &getClientMock{} //without this line, the real api is fired
 
 	response, err := stats_man_provider.StatsManProvider.GetProfileStats(stats_man_domain.ProfileRequest{Steam64ID: "123456789"})
 	assert.NotEqual(t, response, nil)
@@ -57,7 +57,7 @@ func TestGetProfileStatsNoError(t *testing.T) {
 			Body:       ioutil.NopCloser(strings.NewReader(recentMatchesResponse)),
 		}, nil
 	}
-	restclient.ClientStruct = &getClientMock{} //without this line, the real api is fired
+	clients.ClientStruct = &getClientMock{} //without this line, the real api is fired
 
 	response, err := stats_man_provider.StatsManProvider.GetRecentMatches(stats_man_domain.ProfileRequest{Steam64ID: "123456789"})
 	assert.NotEqual(t, response, nil)
@@ -75,7 +75,7 @@ func TestGetMatchNoError(t *testing.T) {
 			Body:       ioutil.NopCloser(strings.NewReader(matchResponse)),
 		}, nil
 	}
-	restclient.ClientStruct = &getClientMock{} //without this line, the real api is fired
+	clients.ClientStruct = &getClientMock{} //without this line, the real api is fired
 
 	response, err := stats_man_provider.StatsManProvider.GetMatch(stats_man_domain.MatchRequest{MatchId: "123456789"})
 	assert.NotEqual(t, response, nil)

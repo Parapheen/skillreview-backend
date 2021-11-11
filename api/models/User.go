@@ -33,7 +33,7 @@ const (
 
 func (u *User) Prepare() {
 	u.UUID = uuid.NewV4()
-	u.Nickname = html.EscapeString(strings.TrimSpace(u.Nickname))
+	u.Nickname = strings.TrimSpace(u.Nickname)
 	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
@@ -42,9 +42,6 @@ func (u *User) Prepare() {
 func (u *User) Validate(action string) error {
 	switch strings.ToLower(action) {
 	case "update":
-		if u.Nickname == "" {
-			return errors.New("Required Nickname")
-		}
 		if u.Email == "" {
 			return errors.New("Required Email")
 		}
@@ -99,7 +96,6 @@ func (u *User) UpdateUser(db *gorm.DB, uuid uuid.UUID) (*User, error) {
 
 	db = db.Model(&User{}).Where("uuid = ?", uuid).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
-			"nickname":   u.Nickname,
 			"email":      u.Email,
 			"updated_at": time.Now(),
 		},

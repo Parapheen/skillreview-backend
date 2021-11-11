@@ -156,7 +156,7 @@ func TestUpdateUser(t *testing.T) {
 		req = mux.SetURLVars(req, map[string]string{"id": v.userId})
 		rr := httptest.NewRecorder()
 		handler := http.HandlerFunc(
-			middlewares.AdminAuthentication(server.UpdateUser),
+			middlewares.AdminAuthentication(server.UpdateUser, server.DB),
 		)
 
 		req.Header.Set("Authorization", v.tokenGiven)

@@ -43,7 +43,7 @@ func Authenticate(next http.HandlerFunc, db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func AdminAuthentication(next http.HandlerFunc) http.HandlerFunc {
+func AdminAuthentication(next http.HandlerFunc, db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := auth.TokenValid(r)
 		if err != nil {
@@ -60,6 +60,13 @@ func AdminAuthentication(next http.HandlerFunc) http.HandlerFunc {
 			responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 			return
 		}
+		u := models.User{}
+		user, err := u.FindUserByUIID(db, uuid.FromStringOrNil(uid))
+		if err != nil {
+			responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+			return
+		}
+		context.Set(r, "user", user)
 		next(w, r)
 	}
 }

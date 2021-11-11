@@ -26,7 +26,7 @@ var (
 
 func (p *statsManProvider) GetRecentMatches(request stats_man_domain.ProfileRequest) ([]stats_man_domain.Match, *stats_man_domain.StatsManError) {
 	url := fmt.Sprintf("%sprofiles/%s/recent_matches", os.Getenv("STATS_API"), request.Steam64ID)
-	response, err := restclient.ClientStruct.Get(url)
+	response, err := clients.ClientStruct.Get(url)
 	if err != nil {
 		log.Println(fmt.Sprintf("error when trying to get recent matches from stats man api %s", err.Error()))
 		return nil, &stats_man_domain.StatsManError{
@@ -65,7 +65,7 @@ func (p *statsManProvider) GetRecentMatches(request stats_man_domain.ProfileRequ
 
 func (p *statsManProvider) GetProfileStats(request stats_man_domain.ProfileRequest) (*stats_man_domain.UserStatsResponse, *stats_man_domain.StatsManError) {
 	url := fmt.Sprintf("%sprofiles/%s/card", os.Getenv("STATS_API"), request.Steam64ID)
-	response, err := restclient.ClientStruct.Get(url)
+	response, err := clients.ClientStruct.Get(url)
 	if err != nil {
 		log.Println(fmt.Sprintf("error when trying to get profile stats from stats man api %s", err.Error()))
 		return nil, &stats_man_domain.StatsManError{
@@ -104,7 +104,7 @@ func (p *statsManProvider) GetProfileStats(request stats_man_domain.ProfileReque
 
 func (p *statsManProvider) GetMatch(request stats_man_domain.MatchRequest) (*stats_man_domain.MinimalMatch, *stats_man_domain.StatsManError) {
 	url := fmt.Sprintf("%smatches/%s", os.Getenv("STATS_API"), request.MatchId)
-	response, err := restclient.ClientStruct.Get(url)
+	response, err := clients.ClientStruct.Get(url)
 	if err != nil {
 		log.Println(fmt.Sprintf("error when trying to get match from stats man api %s", err.Error()))
 		return nil, &stats_man_domain.StatsManError{

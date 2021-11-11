@@ -31,6 +31,7 @@ WORKDIR /root/
 # Copy the Pre-built binary file from the previous stage.
 COPY --from=builder /usr/src/app/main .
 COPY --from=builder /usr/src/app/db/migrations migrations
+COPY --from=builder /usr/src/app/api/emails emails
 
 # Expose port 80 to the outside world
 EXPOSE 80
