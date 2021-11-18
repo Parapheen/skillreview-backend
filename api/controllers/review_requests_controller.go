@@ -84,7 +84,7 @@ func (server *Server) GetReviewRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	reviewReq := models.ReviewRequest{}
 
-	reviewReqReceived, err := reviewReq.FindReviewRequestByUIID(server.DB, reviewReqId)
+	reviewReqReceived, err := reviewReq.FindReviewRequestByUUID(server.DB, reviewReqId)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
@@ -109,7 +109,7 @@ func (server *Server) UpdateReviewRequest(w http.ResponseWriter, r *http.Request
 	}
 
 	reviewReq := models.ReviewRequest{}
-	reviewReqGotten, err := reviewReq.FindReviewRequestByUIID(server.DB, reviewReqId)
+	reviewReqGotten, err := reviewReq.FindReviewRequestByUUID(server.DB, reviewReqId)
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Review Request not found"))
 		return

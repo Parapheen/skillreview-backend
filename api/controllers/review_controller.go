@@ -54,7 +54,7 @@ func (server *Server) CreateReview(w http.ResponseWriter, r *http.Request) {
 	}
 	requestUUID := review.ReviewRequestUUID
 	request := models.ReviewRequest{}
-	requestGotten, err := request.FindReviewRequestByUIID(server.DB, requestUUID)
+	requestGotten, err := request.FindReviewRequestByUUID(server.DB, requestUUID)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
@@ -146,7 +146,7 @@ func (server *Server) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	}
 	reviewRequestUUID := review.ReviewRequestUUID
 	request := models.ReviewRequest{}
-	requestGotten, err := request.FindReviewRequestByUIID(server.DB, reviewRequestUUID)
+	requestGotten, err := request.FindReviewRequestByUUID(server.DB, reviewRequestUUID)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
@@ -164,7 +164,7 @@ func (server *Server) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	if userGotten.ID != review.AuthorID || userGotten.ID != requestGotten.Author.ID || userGotten.Steam64ID != os.Getenv("SUPER_ADMIN_STEAM64ID") {
+	if userGotten.ID != review.AuthorID && userGotten.ID != requestGotten.Author.ID && userGotten.Steam64ID != os.Getenv("SUPER_ADMIN_STEAM64ID") {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}

@@ -54,7 +54,7 @@ func TestGetReviewRequestByUuid(t *testing.T) {
 	if err != nil {
 		log.Fatalf("cannot seed user and review request: %v", err)
 	}
-	foundRR, err := reviewRequestInstance.FindReviewRequestByUIID(server.DB, rr.UUID)
+	foundRR, err := reviewRequestInstance.FindReviewRequestByUUID(server.DB, rr.UUID)
 	if err != nil {
 		t.Errorf("this is the error getting one review request: %v\n", err)
 		return
