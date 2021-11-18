@@ -19,6 +19,7 @@ var server = controllers.Server{}
 var userInstance = models.User{}
 var reviewRequestInstance = models.ReviewRequest{}
 var reviewInstance = models.Review{}
+var applicationInstance = models.ReviewerApplication{}
 
 var reviews = []models.Review{
 	{
@@ -85,6 +86,7 @@ func Database() {
 		&models.User{},
 		&models.ReviewRequest{},
 		&models.Review{},
+		&models.ReviewerApplication{},
 	)
 	if err != nil {
 		log.Fatal("This is the error:", err)
@@ -95,6 +97,7 @@ func Database() {
 		&models.User{},
 		&models.Review{},
 		&models.ReviewRequest{},
+		&models.ReviewerApplication{},
 	)
 	if err != nil {
 		log.Fatal("This is the error:", err)
@@ -104,13 +107,14 @@ func Database() {
 func seedOneUser() (models.User, error) {
 
 	user := models.User{
-		Nickname:  faker.Internet().UserName(),
-		Email:     faker.Internet().Email(),
-		Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Avatar:    faker.Internet().Url(),
-		Rank:      "Ancient 2",
-		Plan:      models.Basic,
+		Nickname:         faker.Internet().UserName(),
+		Email:            faker.Internet().Email(),
+		Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:           faker.Internet().Url(),
+		Rank:             "Ancient 2",
+		VerifiedReviewer: false,
+		Plan:             models.Basic,
 	}
 
 	err := server.DB.Model(&models.User{}).Create(&user).Error
@@ -126,6 +130,7 @@ func refreshDatabase() error {
 		&models.User{},
 		&models.ReviewRequest{},
 		&models.Review{},
+		&models.ReviewerApplication{},
 	)
 	if err != nil {
 		return err
@@ -135,6 +140,7 @@ func refreshDatabase() error {
 		&models.User{},
 		&models.ReviewRequest{},
 		&models.Review{},
+		&models.ReviewerApplication{},
 	)
 	if err != nil {
 		return err
@@ -146,13 +152,14 @@ func refreshDatabase() error {
 func seedOneUserAndOneReviewRequest() (models.ReviewRequest, models.User, error) {
 
 	user := models.User{
-		Nickname:  faker.Internet().UserName(),
-		Email:     faker.Internet().Email(),
-		Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Avatar:    faker.Internet().Url(),
-		Rank:      "Ancient 2",
-		Plan:      models.Basic,
+		Nickname:         faker.Internet().UserName(),
+		Email:            faker.Internet().Email(),
+		Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:           faker.Internet().Url(),
+		Rank:             "Ancient 2",
+		VerifiedReviewer: false,
+		Plan:             models.Basic,
 	}
 	err := server.DB.Model(&models.User{}).Create(&user).Error
 	if err != nil {
@@ -173,16 +180,46 @@ func seedOneUserAndOneReviewRequest() (models.ReviewRequest, models.User, error)
 	return rr, user, nil
 }
 
+func seedOneUserAndOneApplication() (models.ReviewerApplication, models.User, error) {
+
+	user := models.User{
+		Nickname:         faker.Internet().UserName(),
+		Email:            faker.Internet().Email(),
+		Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:           faker.Internet().Url(),
+		Rank:             "Ancient 2",
+		VerifiedReviewer: false,
+		Plan:             models.Basic,
+	}
+	err := server.DB.Model(&models.User{}).Create(&user).Error
+	if err != nil {
+		return models.ReviewerApplication{}, models.User{}, err
+	}
+	application := models.ReviewerApplication{
+		Description: faker.Lorem().Sentence(3),
+		Rating:      faker.RandomInt(1, 15000),
+		State:       models.Recieved,
+		AuthorID:    user.ID,
+	}
+	err = server.DB.Model(&models.ReviewRequest{}).Create(&application).Error
+	if err != nil {
+		return models.ReviewerApplication{}, models.User{}, err
+	}
+	return application, user, nil
+}
+
 func seedOneUserAndOneReviewRequestAndOneReview() (models.ReviewRequest, models.User, models.Review, error) {
 
 	user := models.User{
-		Nickname:  faker.Internet().UserName(),
-		Email:     faker.Internet().Email(),
-		Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Avatar:    faker.Internet().Url(),
-		Rank:      "Ancient 2",
-		Plan:      models.Basic,
+		Nickname:         faker.Internet().UserName(),
+		Email:            faker.Internet().Email(),
+		Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:           faker.Internet().Url(),
+		Rank:             "Ancient 2",
+		VerifiedReviewer: false,
+		Plan:             models.Basic,
 	}
 	err := server.DB.Model(&models.User{}).Create(&user).Error
 	if err != nil {
@@ -220,13 +257,14 @@ func seedOneUserAndOneReviewRequestAndOneReview() (models.ReviewRequest, models.
 func seedOneUserAndOneReviewRequestAndReviews() (models.ReviewRequest, models.User, error) {
 
 	user := models.User{
-		Nickname:  faker.Internet().UserName(),
-		Email:     faker.Internet().Email(),
-		Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Avatar:    faker.Internet().Url(),
-		Rank:      "Ancient 2",
-		Plan:      models.Basic,
+		Nickname:         faker.Internet().UserName(),
+		Email:            faker.Internet().Email(),
+		Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:           faker.Internet().Url(),
+		Rank:             "Ancient 2",
+		VerifiedReviewer: false,
+		Plan:             models.Basic,
 	}
 	err := server.DB.Model(&models.User{}).Create(&user).Error
 	if err != nil {
@@ -264,31 +302,34 @@ func seedUserAndRequestReviews() ([]models.User, []models.ReviewRequest, error) 
 	}
 	var users = []models.User{
 		{
-			Nickname:  faker.Internet().UserName(),
-			Email:     faker.Internet().Email(),
-			Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-			Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-			Avatar:    faker.Internet().Url(),
-			Rank:      "Ancient 2",
-			Plan:      models.Basic,
+			Nickname:         faker.Internet().UserName(),
+			Email:            faker.Internet().Email(),
+			Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+			Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+			Avatar:           faker.Internet().Url(),
+			Rank:             "Ancient 2",
+			VerifiedReviewer: false,
+			Plan:             models.Basic,
 		},
 		{
-			Nickname:  faker.Internet().UserName(),
-			Email:     faker.Internet().Email(),
-			Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-			Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-			Avatar:    faker.Internet().Url(),
-			Rank:      "Ancient 3",
-			Plan:      models.Basic,
+			Nickname:         faker.Internet().UserName(),
+			Email:            faker.Internet().Email(),
+			Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+			Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+			Avatar:           faker.Internet().Url(),
+			Rank:             "Ancient 3",
+			VerifiedReviewer: false,
+			Plan:             models.Basic,
 		},
 		{
-			Nickname:  faker.Internet().UserName(),
-			Email:     faker.Internet().Email(),
-			Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-			Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-			Avatar:    faker.Internet().Url(),
-			Rank:      "Ancient 4",
-			Plan:      models.Pro,
+			Nickname:         faker.Internet().UserName(),
+			Email:            faker.Internet().Email(),
+			Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+			Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+			Avatar:           faker.Internet().Url(),
+			Rank:             "Ancient 4",
+			VerifiedReviewer: true,
+			Plan:             models.Pro,
 		},
 	}
 	var reviewRequests = []models.ReviewRequest{

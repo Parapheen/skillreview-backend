@@ -14,7 +14,7 @@ test:
 
 cleanf:
 	docker-compose down --remove-orphan --volumes
-	docker volume rm backend_database_postgres_test
+	docker volume rm skillreview-backend_database_postgres_test
 
 lint:
 	golangci-lint run

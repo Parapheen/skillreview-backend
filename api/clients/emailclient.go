@@ -16,6 +16,7 @@ type emailClientStruct struct{}
 type EmailClientInterface interface {
 	Greet(receiver string, nickname string) error
 	NewReview(receiver string, nickname string, requestURL string, matchID string) error
+	NewApplication(receiver string, nickname string) error
 	PrepareHTML(fileName string, data interface{}) (*bytes.Buffer, error)
 }
 
@@ -74,6 +75,27 @@ func (cli *emailClientStruct) NewReview(receiver string, nickname string, reques
 		To:      []string{receiver},
 		From:    fmt.Sprintf("SkillReview <%s>", os.Getenv("EMAIL_USER")),
 		Subject: "New review for your match",
+		HTML:    buf.Bytes(),
+		Headers: textproto.MIMEHeader{},
+	}
+
+	return e.Send(fmt.Sprintf("%s:587", os.Getenv("EMAIL_SERVER")), smtp.PlainAuth("", os.Getenv("EMAIL_USER"), os.Getenv("EMAIL_PASSWORD"), os.Getenv("EMAIL_SERVER")))
+}
+
+func (cli *emailClientStruct) NewApplication(receiver string, nickname string) error {
+	templateData := struct {
+		Nickname string
+	}{
+		Nickname: nickname,
+	}
+	buf, err := cli.PrepareHTML("emails/new_application.html", templateData)
+	if err != nil {
+		return err
+	}
+	e := &email.Email{
+		To:      []string{receiver},
+		From:    fmt.Sprintf("SkillReview <%s>", os.Getenv("EMAIL_USER")),
+		Subject: "We recieved your application",
 		HTML:    buf.Bytes(),
 		Headers: textproto.MIMEHeader{},
 	}

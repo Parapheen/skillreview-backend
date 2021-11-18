@@ -18,13 +18,14 @@ func TestSaveUser(t *testing.T) {
 		log.Fatal(err)
 	}
 	newUser := models.User{
-		Nickname:  faker.Internet().UserName(),
-		Email:     faker.Internet().Email(),
-		Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Avatar:    faker.Internet().Url(),
-		Rank:      "Ancient 2",
-		Plan:      models.Basic,
+		Nickname:         faker.Internet().UserName(),
+		Email:            faker.Internet().Email(),
+		Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:           faker.Internet().Url(),
+		Rank:             "Ancient 2",
+		VerifiedReviewer: false,
+		Plan:             models.Basic,
 	}
 	savedUser, err := newUser.SaveUser(server.DB)
 	if err != nil {
@@ -37,6 +38,7 @@ func TestSaveUser(t *testing.T) {
 	assert.Equal(t, newUser.Nickname, savedUser.Nickname)
 	assert.Equal(t, newUser.Avatar, savedUser.Avatar)
 	assert.Equal(t, newUser.Rank, savedUser.Rank)
+	assert.Equal(t, newUser.VerifiedReviewer, savedUser.VerifiedReviewer)
 }
 
 func TestSaveUserDashedNickname(t *testing.T) {
@@ -46,13 +48,14 @@ func TestSaveUserDashedNickname(t *testing.T) {
 		log.Fatal(err)
 	}
 	newUser := models.User{
-		Nickname:  "TAGANROK-MOSCOW",
-		Email:     faker.Internet().Email(),
-		Steam64ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Steam32ID: strconv.Itoa(faker.RandomInt(123, 12345678)),
-		Avatar:    faker.Internet().Url(),
-		Rank:      "Ancient 4",
-		Plan:      models.Basic,
+		Nickname:         "TAGANROK-MOSCOW",
+		Email:            faker.Internet().Email(),
+		Steam64ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Steam32ID:        strconv.Itoa(faker.RandomInt(123, 12345678)),
+		Avatar:           faker.Internet().Url(),
+		Rank:             "Ancient 4",
+		VerifiedReviewer: false,
+		Plan:             models.Basic,
 	}
 	savedUser, err := newUser.SaveUser(server.DB)
 	if err != nil {
@@ -65,6 +68,7 @@ func TestSaveUserDashedNickname(t *testing.T) {
 	assert.Equal(t, newUser.Nickname, savedUser.Nickname)
 	assert.Equal(t, newUser.Avatar, savedUser.Avatar)
 	assert.Equal(t, newUser.Rank, savedUser.Rank)
+	assert.Equal(t, newUser.VerifiedReviewer, savedUser.VerifiedReviewer)
 }
 
 func TestGetUserByUuid(t *testing.T) {
@@ -87,6 +91,7 @@ func TestGetUserByUuid(t *testing.T) {
 	assert.Equal(t, foundUser.UUID, user.UUID)
 	assert.Equal(t, foundUser.Email, user.Email)
 	assert.Equal(t, foundUser.Nickname, user.Nickname)
+	assert.Equal(t, foundUser.VerifiedReviewer, user.VerifiedReviewer)
 	assert.Equal(t, len(foundUser.ReviewRequests), 1)
 }
 

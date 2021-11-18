@@ -111,6 +111,9 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return
 		}
+		if user.Rank == "Immortal" {
+			user.VerifiedReviewer = true
+		}
 		user.Prepare()
 		err = user.Validate("")
 		if err != nil {
