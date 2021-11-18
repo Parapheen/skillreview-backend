@@ -55,6 +55,7 @@ func Database() {
 		&models.User{},
 		&models.ReviewRequest{},
 		&models.Review{},
+		&models.ReviewerApplication{},
 	)
 
 	if err != nil {

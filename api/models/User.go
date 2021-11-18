@@ -13,15 +13,17 @@ import (
 
 type User struct {
 	Base
-	Nickname       string          `gorm:"size:255;not null;unique" json:"nickname"`
-	Email          string          `gorm:"size:100;" json:"email"`
-	Steam64ID      string          `gorm:"size:255;default:null;unique" json:"steam64Id"`
-	Steam32ID      string          `gorm:"size:255;default:null;unique" json:"steam32Id"`
-	Avatar         string          `gorm:"size:255;" json:"avatar"`
-	Rank           string          `gorm:"size:255;" json:"rank"`
-	ReviewRequests []ReviewRequest `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"review_requests"`
-	Reviews        []Review        `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"reviews"`
-	Plan           PlanType        `gorm:"default:'basic';" json:"plan"`
+	Nickname         string                `gorm:"size:255;not null;unique" json:"nickname"`
+	Email            string                `gorm:"size:100;" json:"email"`
+	Steam64ID        string                `gorm:"size:255;default:null;unique" json:"steam64Id"`
+	Steam32ID        string                `gorm:"size:255;default:null;unique" json:"steam32Id"`
+	Avatar           string                `gorm:"size:255;" json:"avatar"`
+	Rank             string                `gorm:"size:255;" json:"rank"`
+	VerifiedReviewer bool                  `gorm:"default: false;" json:"verified_reviewer"`
+	ReviewRequests   []ReviewRequest       `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"review_requests"`
+	Reviews          []Review              `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"reviews"`
+	Applications     []ReviewerApplication `gorm:"constraint:OnDelete:CASCADE;foreignkey:author_id" json:"applications"`
+	Plan             PlanType              `gorm:"default:'basic';" json:"plan"`
 }
 
 type PlanType string
@@ -77,7 +79,7 @@ func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 }
 
 func (u *User) FindUserByUIID(db *gorm.DB, uuid uuid.UUID) (*User, error) {
-	err := db.Model(User{}).Where("uuid = ?", uuid).Preload("ReviewRequests").Preload("ReviewRequests.Reviews").Preload("Reviews").Take(&u).Error
+	err := db.Model(User{}).Where("uuid = ?", uuid).Preload("ReviewRequests").Preload("ReviewRequests.Reviews").Preload("Reviews").Preload("Applications").Take(&u).Error
 	if err != nil {
 		return &User{}, err
 	}

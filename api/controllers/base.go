@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -19,8 +20,9 @@ import (
 )
 
 type Server struct {
-	DB     *gorm.DB
-	Router *mux.Router
+	DB       *gorm.DB
+	Router   *mux.Router
+	Telegram *tgbotapi.BotAPI
 }
 
 func Getenv(key, fallback string) string {
@@ -62,6 +64,10 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 	}
 
 	server.Router = mux.NewRouter()
+	server.Telegram, err = tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_TOKEN"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	server.initializeRoutes()
 }

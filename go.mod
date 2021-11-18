@@ -6,6 +6,7 @@ require (
 	github.com/badoux/checkmail v1.2.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/getsentry/sentry-go v0.11.0 // indirect
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.4.0-beta.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/handlers v1.5.1
