@@ -90,7 +90,7 @@ func (server *Server) GetApplication(w http.ResponseWriter, r *http.Request) {
 	}
 	application := models.ReviewerApplication{}
 
-	applicationReceived, err := application.FindApplicationByUIID(server.DB, applicationId)
+	applicationReceived, err := application.FindApplicationByUUID(server.DB, applicationId)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return

@@ -51,7 +51,7 @@ func TestGetApplicationByUuid(t *testing.T) {
 	if err != nil {
 		log.Fatalf("cannot seed user and application: %v", err)
 	}
-	foundApplication, err := applicationInstance.FindApplicationByUIID(server.DB, application.UUID)
+	foundApplication, err := applicationInstance.FindApplicationByUUID(server.DB, application.UUID)
 	if err != nil {
 		t.Errorf("this is the error getting one application: %v\n", err)
 		return

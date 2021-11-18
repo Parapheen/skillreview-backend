@@ -89,7 +89,7 @@ func (application *ReviewerApplication) FindAllApplications(db *gorm.DB) (*[]Rev
 	return &applications, nil
 }
 
-func (application *ReviewerApplication) FindApplicationByUIID(db *gorm.DB, uid uuid.UUID) (*ReviewerApplication, error) {
+func (application *ReviewerApplication) FindApplicationByUUID(db *gorm.DB, uid uuid.UUID) (*ReviewerApplication, error) {
 	var err error
 	err = db.Model(&ReviewerApplication{}).Where("uuid = ?", uid).Take(&application).Error
 	if err != nil {
