@@ -39,7 +39,7 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/v1/reviews", middlewares.SetMiddlewareJSON(s.CreateReview)).Methods("POST")
 	s.Router.HandleFunc("/v1/reviews", middlewares.SetMiddlewareJSON(s.GetReviews)).Methods("GET")
 	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.SetMiddlewareJSON(s.GetReview)).Methods("GET")
-	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.SetMiddlewareJSON(middlewares.Authenticate(s.UpdateReview, s.DB))).Methods("PUT")
+	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.SetMiddlewareJSON(s.UpdateReview)).Methods("PUT")
 	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.Authenticate(s.DeleteReview, s.DB)).Methods("DELETE")
 
 	// Applications routes

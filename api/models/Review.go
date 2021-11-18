@@ -98,7 +98,7 @@ func (review *Review) FindAllReviews(db *gorm.DB) (*[]Review, error) {
 	return &reviews, nil
 }
 
-func (review *Review) FindReviewByUIID(db *gorm.DB, pid uuid.UUID) (*Review, error) {
+func (review *Review) FindReviewByUUID(db *gorm.DB, pid uuid.UUID) (*Review, error) {
 	var err error
 	err = db.Model(&Review{}).Where("uuid = ?", pid).Take(&review).Error
 	if err != nil {
