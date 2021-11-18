@@ -103,7 +103,7 @@ func (server *Server) GetReview(w http.ResponseWriter, r *http.Request) {
 	}
 	review := models.Review{}
 
-	reviewReceived, err := review.FindReviewByUIID(server.DB, reviewId)
+	reviewReceived, err := review.FindReviewByUUID(server.DB, reviewId)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
