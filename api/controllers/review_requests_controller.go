@@ -69,14 +69,14 @@ func (server *Server) GetReviewRequests(w http.ResponseWriter, r *http.Request) 
 	page, _ := strconv.Atoi(vars["page"])
 	if page == 0 {
 		page = 1
-	  }
+	}
 
 	pageSize, _ := strconv.Atoi(vars["page_size"])
 	switch {
 	case pageSize > 100:
-	pageSize = 100
+		pageSize = 100
 	case pageSize <= 0:
-	pageSize = 10
+		pageSize = 10
 	}
 
 	offset := (page - 1) * pageSize
