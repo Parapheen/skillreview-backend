@@ -76,10 +76,11 @@ func (server *Server) Run(addr string) {
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	origins := handlers.AllowedOrigins([]string{"*"})
 	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
+	exposedHeaders := handlers.ExposedHeaders([]string{"X-Total-Count"})
 
 	loggedRouter := handlers.LoggingHandler(os.Stdout, server.Router)
 	port := Getenv("PORT", "8080")
 	log.Printf("Listening to port %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), handlers.CORS(headers, methods, origins)(server.Router)),
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), handlers.CORS(headers, methods, origins, exposedHeaders)(server.Router)),
 		handlers.CompressHandler(server.Router), loggedRouter)
 }
