@@ -47,7 +47,7 @@ func ConvertRankToMedal(rankTier int) (string, error) {
 		10: "Herald",
 		0:  "Uncalibrated",
 	}
-	rank := int(math.Floor(float64(rankTier)/10) * 10)
+	rank := int(math.Floor(float64(rankTier) / 10) * 10)
 	tier := rankTier % 10
 	medal := "Unknown"
 	if rank >= 0 && rank < 90 {
@@ -65,12 +65,12 @@ func FetchUserRank(steamID string) (string, error) {
 	}
 	stats, apiError := services.StatsManService.GetUserProfileStats(request)
 	if apiError != nil {
-		return "", errors.New(apiError.Message())
+		return "Unknown", errors.New(apiError.Message())
 	}
 
 	rank, err := ConvertRankToMedal(stats.RankTier)
 	if err != nil {
-		return "", err
+		return "Unknown", err
 	}
 	return rank, nil
 }
@@ -108,8 +108,7 @@ func (server *Server) LoginCallback(w http.ResponseWriter, r *http.Request) {
 		user.Avatar = steamUser.AvatarURL
 		user.Rank, err = FetchUserRank(user.Steam64ID)
 		if err != nil {
-			responses.ERROR(w, http.StatusInternalServerError, err)
-			return
+			log.Println(err)
 		}
 		if user.Rank == "Immortal" {
 			user.VerifiedReviewer = true
