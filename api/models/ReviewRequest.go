@@ -84,9 +84,9 @@ func (rr *ReviewRequest) SaveReviewRequest(db *gorm.DB) (*ReviewRequest, error) 
 	return rr, nil
 }
 
-func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB) (*[]ReviewRequest, error) {
+func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB, limit int, offset int) (*[]ReviewRequest, error) {
 	reviewRequests := []ReviewRequest{}
-	err := db.Model(&ReviewRequest{}).Limit(100).Preload("Reviews").Find(&reviewRequests).Error
+	err := db.Model(&ReviewRequest{}).Offset(offset).Limit(limit).Order("created_at desc").Preload("Reviews").Find(&reviewRequests).Error
 	if err != nil {
 		return &[]ReviewRequest{}, err
 	}
@@ -99,6 +99,15 @@ func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB) (*[]ReviewRequest, e
 		}
 	}
 	return &reviewRequests, nil
+}
+
+func (rr *ReviewRequest) CountReviewRequests(db *gorm.DB) (int64, error) {
+	var count int64
+	err := db.Model(&ReviewRequest{}).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (rr *ReviewRequest) FindReviewRequestByUUID(db *gorm.DB, pid uuid.UUID) (*ReviewRequest, error) {

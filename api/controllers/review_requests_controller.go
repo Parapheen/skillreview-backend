@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/Parapheen/skillreview-backend/api/auth"
 	"github.com/Parapheen/skillreview-backend/api/models"
@@ -64,13 +65,30 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 
 func (server *Server) GetReviewRequests(w http.ResponseWriter, r *http.Request) {
 
-	reviewReq := models.ReviewRequest{}
+	vars := mux.Vars(r)
+	page, _ := strconv.Atoi(vars["page"])
+	if page == 0 {
+		page = 1
+	  }
 
-	reviewReqs, err := reviewReq.FindAllReviewRequests(server.DB)
+	pageSize, _ := strconv.Atoi(vars["page_size"])
+	switch {
+	case pageSize > 100:
+	pageSize = 100
+	case pageSize <= 0:
+	pageSize = 10
+	}
+
+	offset := (page - 1) * pageSize
+
+	reviewReq := models.ReviewRequest{}
+	reviewReqs, err := reviewReq.FindAllReviewRequests(server.DB, pageSize, offset)
+	totalCount, err := reviewReq.CountReviewRequests(server.DB)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
+	w.Header().Set("X-Total-Count", fmt.Sprintf("%d", totalCount))
 	responses.JSON(w, http.StatusOK, reviewReqs)
 }
 

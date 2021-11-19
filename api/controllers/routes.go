@@ -43,8 +43,11 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/v1/reviews/{id}", middlewares.Authenticate(s.DeleteReview, s.DB)).Methods("DELETE")
 
 	// Applications routes
-	s.Router.HandleFunc("/v1/applications", middlewares.SetMiddlewareJSON(s.CreateApplication)).Methods("POST")
-	s.Router.HandleFunc("/v1/applications", middlewares.SetMiddlewareJSON(s.GetApplications)).Methods("GET")
-	s.Router.HandleFunc("/v1/applications/{id}", middlewares.SetMiddlewareJSON(s.GetApplication)).Methods("GET")
+	s.Router.HandleFunc("/v1/applications", middlewares.SetMiddlewareJSON(middlewares.Authenticate(s.CreateApplication, s.DB))).Methods("POST")
+	s.Router.HandleFunc("/v1/applications/{id}", middlewares.SetMiddlewareJSON(middlewares.Authenticate(s.GetApplication, s.DB))).Methods("GET")
 	s.Router.HandleFunc("/v1/applications/{id}", middlewares.SetMiddlewareJSON(middlewares.Authenticate(s.UpdateApplication, s.DB))).Methods("PUT")
+
+	// Internal routes
+	// s.Router.HandleFunc("/v1/internal/applications", middlewares.SetMiddlewareJSON(middlewares.InternalAuthenticate(s.GetApplications, s.DB))).Methods("GET")
+	// s.Router.HandleFunc("/v1/internal/applications/{id}", middlewares.SetMiddlewareJSON(middlewares.Authenticate(s.UpdateApplication, s.DB))).Methods("PUT")
 }
