@@ -65,13 +65,13 @@ func (server *Server) CreateReviewRequest(w http.ResponseWriter, r *http.Request
 
 func (server *Server) GetReviewRequests(w http.ResponseWriter, r *http.Request) {
 
-	vars := mux.Vars(r)
-	page, _ := strconv.Atoi(vars["page"])
+	query := r.URL.Query()
+	page, _ := strconv.Atoi(query.Get("page"))
 	if page == 0 {
 		page = 1
 	}
 
-	pageSize, _ := strconv.Atoi(vars["page_size"])
+	pageSize, _ := strconv.Atoi(query.Get("page_size"))
 	switch {
 	case pageSize > 100:
 		pageSize = 100
