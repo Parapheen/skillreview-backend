@@ -217,7 +217,7 @@ func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	_, err = reviewReq.DeleteReviewRequest(server.DB, reviewReqId, userGotten.ID)
+	_, err = reviewReq.DeleteReviewRequest(server.DB, reviewReqId, reviewReq.AuthorID)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
