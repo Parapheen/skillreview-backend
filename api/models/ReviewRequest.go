@@ -143,15 +143,15 @@ func (rr *ReviewRequest) UpdateReviewRequest(db *gorm.DB, rrUUID uuid.UUID) (*Re
 	return rr, nil
 }
 
-func (rr *ReviewRequest) DeleteReviewRequest(db *gorm.DB, pid uuid.UUID, uid uuid.UUID) (int64, error) {
+func (rr *ReviewRequest) DeleteReviewRequest(db *gorm.DB, uuid uuid.UUID, author_id uint32) (int64, error) {
 
-	db = db.Model(&ReviewRequest{}).Where("id = ? and author_id = ?", pid, uid).Take(&ReviewRequest{}).Delete(&ReviewRequest{})
+	err := db.Model(&ReviewRequest{}).Where("uuid = ? and author_id = ?", uuid, author_id).Take(&ReviewRequest{}).Delete(&ReviewRequest{}).Error
 
-	if db.Error != nil {
-		if db.Error == gorm.ErrRecordNotFound {
-			return 0, errors.New("Post not found")
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, errors.New("Request not found")
 		}
 		return 0, db.Error
 	}
-	return db.RowsAffected, nil
+	return 1, nil
 }

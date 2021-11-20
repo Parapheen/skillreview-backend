@@ -47,7 +47,7 @@ func ConvertRankToMedal(rankTier int) (string, error) {
 		10: "Herald",
 		0:  "Uncalibrated",
 	}
-	rank := int(math.Floor(float64(rankTier) / 10) * 10)
+	rank := int(math.Floor(float64(rankTier)/10) * 10)
 	tier := rankTier % 10
 	medal := "Unknown"
 	if rank >= 0 && rank < 90 {
