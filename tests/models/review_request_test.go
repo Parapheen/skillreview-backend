@@ -95,3 +95,23 @@ func TestUpdateReviewRequest(t *testing.T) {
 	assert.Equal(t, updatedRR.State, rrUpdate.State)
 	assert.Equal(t, updatedRR.Description, rrUpdate.Description)
 }
+
+func TestDeleteReviewRequest(t *testing.T) {
+
+	err := refreshDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rr, user, err := seedOneUserAndOneReviewRequest()
+	if err != nil {
+		log.Fatalf("cannot seed user and review request: %v", err)
+	}
+
+	deleted, err := rr.DeleteReviewRequest(server.DB, rr.UUID, user.ID)
+	if err != nil {
+		t.Errorf("this is the error updating the revuew request: %v\n", err)
+		return
+	}
+	assert.Equal(t, deleted, int64(1))
+}

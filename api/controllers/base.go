@@ -75,7 +75,7 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 func (server *Server) Run(addr string) {
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	origins := handlers.AllowedOrigins([]string{"*"})
-	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "DELETE"})
 	exposedHeaders := handlers.ExposedHeaders([]string{"X-Total-Count"})
 
 	loggedRouter := handlers.LoggingHandler(os.Stdout, server.Router)

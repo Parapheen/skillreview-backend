@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/Parapheen/skillreview-backend/api/auth"
@@ -195,9 +196,9 @@ func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request
 	}
 
 	reviewReq := models.ReviewRequest{}
-	err = server.DB.Model(models.ReviewRequest{}).Where("id = ?", reviewReqId).Take(&reviewReq).Error
+	err = server.DB.Model(models.ReviewRequest{}).Where("uuid = ?", reviewReqId).Take(&reviewReq).Error
 	if err != nil {
-		responses.ERROR(w, http.StatusNotFound, errors.New("Unauthorized"))
+		responses.ERROR(w, http.StatusNotFound, errors.New("Not found"))
 		return
 	}
 	userUUID, err := uuid.FromString(uid)
@@ -212,11 +213,11 @@ func (server *Server) DeleteReviewRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if userGotten.ID != reviewReq.AuthorID {
+	if userGotten.ID != reviewReq.AuthorID && userGotten.Steam64ID != os.Getenv("SUPER_ADMIN_STEAM64ID") {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	_, err = reviewReq.DeleteReviewRequest(server.DB, reviewReqId, userUUID)
+	_, err = reviewReq.DeleteReviewRequest(server.DB, reviewReqId, userGotten.ID)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
