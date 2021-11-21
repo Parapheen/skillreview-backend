@@ -15,6 +15,7 @@ type ReviewRequest struct {
 	Description        string       `gorm:"size:255;not null;" json:"description"`
 	State              RequestState `gorm:"not null; default:'open'" json:"state"`
 	HeroPlayed         int          `gorm:"size:255;not null;" json:"hero_played"`
+	Position           MatchPos     `gorm:"size:255;" json:"position"`
 	AuthorRank         string       `gorm:"not null;" json:"author_rank"`
 	SelfRateLaning     int          `gorm:"not null" json:"self_rate_laning"`
 	SelfRateTeamfights int          `gorm:"not null" json:"self_rate_teamfights"`
@@ -30,6 +31,21 @@ const (
 	Open   RequestState = "open"
 	Closed RequestState = "closed"
 )
+
+type MatchPos string
+
+const (
+	HardSupport MatchPos = "Hard Support"
+	Support     MatchPos = "Support"
+	Offlane     MatchPos = "Offlane"
+	Mid         MatchPos = "Mid"
+	Carry       MatchPos = "Carry"
+)
+
+type Filters struct {
+	State    RequestState
+	Position MatchPos
+}
 
 func (rr *ReviewRequest) Prepare() {
 	rr.UUID = uuid.NewV4()
@@ -84,9 +100,15 @@ func (rr *ReviewRequest) SaveReviewRequest(db *gorm.DB) (*ReviewRequest, error) 
 	return rr, nil
 }
 
-func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB, limit int, offset int) (*[]ReviewRequest, error) {
+func (rr *ReviewRequest) FindAllReviewRequests(db *gorm.DB, limit int, offset int, filters Filters) (*[]ReviewRequest, error) {
+	var err error
+
 	reviewRequests := []ReviewRequest{}
-	err := db.Model(&ReviewRequest{}).Offset(offset).Limit(limit).Order("created_at desc").Preload("Reviews").Find(&reviewRequests).Error
+	if filters.Position != "" {
+		err = db.Model(&ReviewRequest{}).Where("state = ? AND position = ?", filters.State, filters.Position).Offset(offset).Limit(limit).Order("created_at desc").Preload("Reviews").Find(&reviewRequests).Error
+	} else {
+		err = db.Model(&ReviewRequest{}).Where("state = ?", filters.State).Offset(offset).Limit(limit).Order("created_at desc").Preload("Reviews").Find(&reviewRequests).Error
+	}
 	if err != nil {
 		return &[]ReviewRequest{}, err
 	}

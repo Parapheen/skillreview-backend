@@ -82,8 +82,22 @@ func (server *Server) GetReviewRequests(w http.ResponseWriter, r *http.Request) 
 
 	offset := (page - 1) * pageSize
 
+	filterState := query.Get("state")
+	if filterState == "" {
+		filterState = string(models.Open)
+	}
+
+	filterPosition := query.Get("position")
+	filters := models.Filters{}
+	if filterPosition == "" {
+		filters.State = models.RequestState(filterState)
+	} else {
+		filters.State = models.RequestState(filterState)
+		filters.Position = models.MatchPos(filterPosition)
+	}
+
 	reviewReq := models.ReviewRequest{}
-	reviewReqs, err := reviewReq.FindAllReviewRequests(server.DB, pageSize, offset)
+	reviewReqs, err := reviewReq.FindAllReviewRequests(server.DB, pageSize, offset, filters)
 	totalCount, err := reviewReq.CountReviewRequests(server.DB)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
